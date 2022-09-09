@@ -4,13 +4,18 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import APIKeyCookie, OAuth2AuthorizationCodeBearer
 from tqdm import tqdm
 from sqlalchemy.orm import Session
+import warnings
+
+
+from ta import add_all_ta_features
+from ta.utils import dropna
 
 import pandas as pd
 
 import yfinance as yf
 
-from db import get_db, StockData, Bot, Trade, \
-        BotPD, StockDataPD, TradePD
+from db import get_db, StockData, Bot, Trade, TechnicalAnalysis, \
+        BotPD, StockDataPD, TradePD, TechnicalAnalysisPD
 
 app = FastAPI()
 
@@ -30,7 +35,7 @@ async def __update(db: Session):
         if db.query(StockData).filter(StockData.ticker == ticker).first() is None:
             lookback = "5y"
         else:
-            lookback = "2d"
+            lookback = "201d"
         # if not, add complete history
         df = yf.download(ticker, interval = "1d", period=lookback, progress=False)
         # stockdataobjects = []
@@ -52,9 +57,37 @@ async def __update(db: Session):
                     db.merge(stockobj)
                     db.commit()
                 except Exception as e:
-                    print("SQL insert error with: " + ticker)
+                    print("Stockdata SQL insert error with: " + ticker)
                     print(e)
-        
+        # next add technical indicators
+        df = dropna(df)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            df = add_all_ta_features(
+                df, open="Open", high="High", low="Low", close="Close", volume="Volume", fillna=True)
+        df["SMA_3"] = df["Close"].rolling(window=3).mean()
+        df["SMA_10"] = df["Close"].rolling(window=10).mean()
+        df["SMA_50"] = df["Close"].rolling(window=50).mean()
+        df["SMA_200"] = df["Close"].rolling(window=200).mean()
+
+        # fill zero values with the previous value
+        # df format: earlier -> later, therefore we need to bfill to avoid taking future information
+        df = df.replace(0, method="bfill")
+
+        # drop standard shiet
+        df = df.drop(columns=["Open", "High", "Low", "Close", "Volume", "Adj Close"])
+        # then do the same
+        for i in range(len(df)):
+            rowdict = df.iloc[i].to_dict()
+            rowdict["timestamp"] = pd.to_datetime(df.index[i])
+            rowdict["ticker"] = ticker
+            ta_obj = TechnicalAnalysis(**rowdict)
+            try:
+                db.merge(ta_obj)
+                db.commit()
+            except Exception as e:
+                print("TA SQL insert error with: " + ticker)
+                print(e)
 
 @app.get("/update")
 async def update(db: Session = Depends(get_db)):

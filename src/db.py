@@ -67,8 +67,135 @@ class Trade(Base):
     price = Column(Float)
     quantity = Column(Integer)
 
+# ta
+# all ta columns
+TA_COLUMNS = [
+    'volume_adi','volume_obv', 'volume_cmf', 'volume_fi', 'volume_em', 'volume_sma_em',
+    'volume_vpt', 'volume_vwap', 'volume_mfi', 'volume_nvi',
+    'volatility_bbm', 'volatility_bbh', 'volatility_bbl', 'volatility_bbw',
+    'volatility_bbp', 'volatility_bbhi', 'volatility_bbli',
+    'volatility_kcc', 'volatility_kch', 'volatility_kcl', 'volatility_kcw',
+    'volatility_kcp', 'volatility_kchi', 'volatility_kcli',
+    'volatility_dcl', 'volatility_dch', 'volatility_dcm', 'volatility_dcw',
+    'volatility_dcp', 'volatility_atr', 'volatility_ui', 'trend_macd',
+    'trend_macd_signal', 'trend_macd_diff', 'trend_sma_fast',
+    'trend_sma_slow', 'trend_ema_fast', 'trend_ema_slow',
+    'trend_vortex_ind_pos', 'trend_vortex_ind_neg', 'trend_vortex_ind_diff',
+    'trend_trix', 'trend_mass_index', 'trend_dpo', 'trend_kst',
+    'trend_kst_sig', 'trend_kst_diff', 'trend_ichimoku_conv',
+    'trend_ichimoku_base', 'trend_ichimoku_a', 'trend_ichimoku_b',
+    'trend_stc', 'trend_adx', 'trend_adx_pos', 'trend_adx_neg', 'trend_cci',
+    'trend_visual_ichimoku_a', 'trend_visual_ichimoku_b', 'trend_aroon_up',
+    'trend_aroon_down', 'trend_aroon_ind', 'trend_psar_up',
+    'trend_psar_down', 'trend_psar_up_indicator',
+    'trend_psar_down_indicator', 'momentum_rsi', 'momentum_stoch_rsi',
+    'momentum_stoch_rsi_k', 'momentum_stoch_rsi_d', 'momentum_tsi',
+    'momentum_uo', 'momentum_stoch', 'momentum_stoch_signal', 'momentum_wr',
+    'momentum_ao', 'momentum_roc', 'momentum_ppo', 'momentum_ppo_signal',
+    'momentum_ppo_hist', 'momentum_pvo', 'momentum_pvo_signal',
+    'momentum_pvo_hist', 'momentum_kama', 'others_dr', 'others_dlr',
+    'others_cr'
+]
+class TechnicalAnalysis(Base):
+    __tablename__ = "technical_analysis"
+    timestamp = Column(DateTime, primary_key=True, index=True)
+    ticker = Column(String, primary_key=True, index=True)
+    volume_adi = Column(Float)
+    volume_obv = Column(Float)
+    volume_cmf = Column(Float)
+    volume_fi = Column(Float)
+    volume_em = Column(Float)
+    volume_sma_em = Column(Float)
+    volume_vpt = Column(Float)
+    volume_vwap = Column(Float)
+    volume_mfi = Column(Float)
+    volume_nvi = Column(Float)
+    volatility_bbm = Column(Float)
+    volatility_bbh = Column(Float)
+    volatility_bbl = Column(Float)
+    volatility_bbw = Column(Float)
+    volatility_bbp = Column(Float)
+    volatility_bbhi = Column(Float)
+    volatility_bbli = Column(Float)
+    volatility_kcc = Column(Float)
+    volatility_kch = Column(Float)
+    volatility_kcl = Column(Float)
+    volatility_kcw = Column(Float)
+    volatility_kcp = Column(Float)
+    volatility_kchi = Column(Float)
+    volatility_kcli = Column(Float)
+    volatility_dcl = Column(Float)
+    volatility_dch = Column(Float)
+    volatility_dcm = Column(Float)
+    volatility_dcw = Column(Float)
+    volatility_dcp = Column(Float)
+    volatility_atr = Column(Float)
+    volatility_ui = Column(Float)
+    trend_macd = Column(Float)
+    trend_macd_signal = Column(Float)
+    trend_macd_diff = Column(Float)
+    trend_sma_fast = Column(Float)
+    trend_sma_slow = Column(Float)
+    trend_ema_fast = Column(Float)
+    trend_ema_slow = Column(Float)
+    trend_vortex_ind_pos = Column(Float)
+    trend_vortex_ind_neg = Column(Float)
+    trend_vortex_ind_diff = Column(Float)
+    trend_trix = Column(Float)
+    trend_mass_index = Column(Float)
+    trend_dpo = Column(Float)
+    trend_kst = Column(Float)
+    trend_kst_sig = Column(Float)
+    trend_kst_diff = Column(Float)
+    trend_ichimoku_conv = Column(Float)
+    trend_ichimoku_base = Column(Float)
+    trend_ichimoku_a = Column(Float)
+    trend_ichimoku_b = Column(Float)
+    trend_stc = Column(Float)
+    trend_adx = Column(Float)
+    trend_adx_pos = Column(Float)
+    trend_adx_neg = Column(Float)
+    trend_cci = Column(Float)
+    trend_visual_ichimoku_a = Column(Float)
+    trend_visual_ichimoku_b = Column(Float)
+    trend_aroon_up = Column(Float)
+    trend_aroon_down = Column(Float)
+    trend_aroon_ind = Column(Float)
+    trend_psar_up = Column(Float)
+    trend_psar_down = Column(Float)
+    trend_psar_up_indicator = Column(Float)
+    trend_psar_down_indicator = Column(Float)
+    momentum_rsi = Column(Float)
+    momentum_stoch_rsi = Column(Float)
+    momentum_stoch_rsi_k = Column(Float)
+    momentum_stoch_rsi_d = Column(Float)
+    momentum_tsi = Column(Float)
+    momentum_uo = Column(Float)
+    momentum_stoch = Column(Float)
+    momentum_stoch_signal = Column(Float)
+    momentum_wr = Column(Float)
+    momentum_ao = Column(Float)
+    momentum_roc = Column(Float)
+    momentum_ppo = Column(Float)
+    momentum_ppo_signal = Column(Float)
+    momentum_ppo_hist = Column(Float)
+    momentum_pvo = Column(Float)
+    momentum_pvo_signal = Column(Float)
+    momentum_pvo_hist = Column(Float)
+    momentum_kama = Column(Float)
+    others_dr = Column(Float)
+    others_dlr = Column(Float)
+    others_cr = Column(Float)
+    # manually added later on
+    SMA_3 = Column(Float)
+    SMA_10 = Column(Float)
+    SMA_50 = Column(Float)
+    SMA_100 = Column(Float)
+    SMA_200 = Column(Float)
+
 BotPD = sqlalchemy_to_pydantic(Bot)
 StockDataPD = sqlalchemy_to_pydantic(StockData)
 TradePD = sqlalchemy_to_pydantic(Trade)
+TechnicalAnalysisPD = sqlalchemy_to_pydantic(TechnicalAnalysis)
 
 Base.metadata.create_all(engine)
