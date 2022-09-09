@@ -1,0 +1,9 @@
+fastapi
+SqlAlchemy
+psycopg2-binary
+uvicorn[standard]
+python-dotenv
+pydantic_sqlalchemy
+yfinance
+pandas
+ta
