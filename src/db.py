@@ -8,6 +8,8 @@ from sqlalchemy import (JSON, Boolean, Column, Date, DateTime, Float, Integer,
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.types import BigInteger
+from sqlalchemy.ext.mutable import MutableDict
+
 
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
 from dotenv import load_dotenv
@@ -43,6 +45,8 @@ class Bot(Base):
     # id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, primary_key=True, index=True)
     description = Column(String, default = "no description yet")
+    startMoney = Column(Float, default = 10000)
+    portfolio = Column(MutableDict.as_mutable(JSON), default = lambda: {"USD": 10000})
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -197,5 +201,10 @@ BotPD = sqlalchemy_to_pydantic(Bot)
 StockDataPD = sqlalchemy_to_pydantic(StockData)
 TradePD = sqlalchemy_to_pydantic(Trade)
 TechnicalAnalysisPD = sqlalchemy_to_pydantic(TechnicalAnalysis)
+
+# custom pydantic
+class NewBotPD(BaseModel):
+    name: str
+    description: str
 
 Base.metadata.create_all(engine)

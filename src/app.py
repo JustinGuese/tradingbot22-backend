@@ -15,7 +15,7 @@ import pandas as pd
 import yfinance as yf
 
 from db import get_db, StockData, Bot, Trade, TechnicalAnalysis, \
-        BotPD, StockDataPD, TradePD, TechnicalAnalysisPD
+        BotPD, StockDataPD, TradePD, TechnicalAnalysisPD, NewBotPD
 
 app = FastAPI()
 
@@ -27,6 +27,8 @@ ALLOWED_STOCKS = [
     "CWEG.L", "IWDA.AS", "EEM", # etfs
     "BTC-USD", "ETH-USD", "AVAX-USD" # crypto
 ]
+# interactive brokers 0.05% of Trade Value
+COMMISSION = 0.0005
 
 async def __update(db: Session):
     print("updating data now")
@@ -92,3 +94,103 @@ async def __update(db: Session):
 @app.get("/update")
 async def update(db: Session = Depends(get_db)):
     await __update(db)
+
+## account functions
+@app.put("/bot/", tags = ["account"])
+async def create_bot(bot: NewBotPD, request: Request, db: Session = Depends(get_db)):
+    # check if bot already exists
+    if db.query(Bot).filter(Bot.name == bot.name).first() is not None:
+        raise HTTPException(status_code=400, detail="Bot already exists")
+    botobj = Bot(**bot.dict())
+    db.add(botobj)
+    db.commit()
+
+@app.get("/bot/", response_model=list[BotPD], tags = ["account"])
+async def get_bots(request: Request, db: Session = Depends(get_db)):
+    bots = db.query(Bot).all()
+    return bots
+
+# get specific bot
+@app.get("/bot/{botname}", response_model=BotPD, tags = ["account"])
+async def get_bot(botname: int, request: Request, db: Session = Depends(get_db)):
+    bot = db.query(Bot).filter(Bot.name == botname).first()
+    if bot is None:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    return bot
+
+# delete bot
+@app.delete("/bot/{botname}", tags = ["account"])
+async def delete_bot(botname: str, request: Request, db: Session = Depends(get_db)):
+    bot = db.query(Bot).filter(Bot.name == botname).first()
+    if bot is None:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    db.delete(bot)
+    db.commit()
+# end account functions
+
+## trade functions
+@app.put("/buy/", tags = ["trades"])
+async def buy_stock(botname: str, ticker: str, request: Request, db: Session = Depends(get_db), amount: float = -1):
+    bot = db.query(Bot).filter(Bot.name == botname).first()
+    if bot is None:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    if ticker not in ALLOWED_STOCKS:
+        raise HTTPException(status_code=400, detail="Ticker not allowed")
+    # get current price
+    currentPrice = yf.download(ticker, interval = "1d", period="1d", progress=False)["Close"].iloc[-1]
+    # check if bot has enough money
+    if bot.portfolio["USD"] < amount * currentPrice:
+        raise HTTPException(status_code=400, detail="Not enough money")
+    # add trade on bot
+    # if amount == -1 then buy all we can
+    if amount == -1:
+        amount = bot.portfolio["USD"] / currentPrice * (1 - COMMISSION)
+    if ticker in bot.portfolio:
+        bot.portfolio[ticker] += amount
+    else:
+        bot.portfolio[ticker] = amount
+    bot.portfolio["USD"] -= amount * currentPrice * (1 + COMMISSION)
+    db.commit()
+    # then create trade object
+    trade = Trade(
+            bot = botname,
+            ticker = ticker,
+            buy = True,
+            price = currentPrice,
+            quantity = amount)
+    db.add(trade)
+    db.commit()
+    return bot.portfolio
+
+@app.put("/sell/", tags = ["trades"])
+async def sell_stock(botname: str, ticker: str, request: Request, db: Session = Depends(get_db), amount: float = -1):
+    bot = db.query(Bot).filter(Bot.name == botname).first()
+    if bot is None:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    if ticker not in ALLOWED_STOCKS:
+        raise HTTPException(status_code=400, detail="Ticker not allowed")
+    # get current price
+    currentPrice = yf.download(ticker, interval = "1d", period="1d", progress=False)["Close"].iloc[-1]
+    # check if bot has enough stock
+    if ticker not in bot.portfolio:
+        raise HTTPException(status_code=404, detail="you do not own that stock to sell")
+    if amount == -1:
+        amount = bot.portfolio[ticker]
+    if bot.portfolio[ticker] < amount:
+        raise HTTPException(status_code=400, detail="Not enough stock. you wanted: %.2f, you have: %.2f" % (amount, bot.portfolio[ticker]))
+
+    # add trade on bot
+    bot.portfolio[ticker] -= amount
+    bot.portfolio["USD"] += amount * currentPrice * (1 - COMMISSION)
+    db.commit()
+
+    # then create trade object
+    trade = Trade(
+            bot = botname,
+            ticker = ticker,
+            buy = False,
+            price = currentPrice,
+            quantity = amount)
+    db.add(trade)
+    db.commit()
+    return bot.portfolio
