@@ -113,11 +113,26 @@ async def get_bots(request: Request, db: Session = Depends(get_db)):
 
 # get specific bot
 @app.get("/bot/{botname}", response_model=BotPD, tags = ["account"])
-async def get_bot(botname: int, request: Request, db: Session = Depends(get_db)):
+async def get_bot(botname: str, request: Request, db: Session = Depends(get_db)):
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
     return bot
+
+# get portfolio worth
+@app.get("/bot/{botname}/portfolioworth", tags = ["account"])
+async def get_portfolio_worth(botname: str, request: Request, db: Session = Depends(get_db)):
+    bot = db.query(Bot).filter(Bot.name == botname).first()
+    if bot is None:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    portfolio = bot.portfolio
+    worth = 0
+    for ticker,amount in portfolio.items():
+        if ticker == "USD":
+            worth += amount
+        else:
+            worth += await __getCurrentPrice(ticker) * amount
+    return {"worth": worth}
 
 # delete bot
 @app.delete("/bot/{botname}", tags = ["account"])
@@ -129,17 +144,24 @@ async def delete_bot(botname: str, request: Request, db: Session = Depends(get_d
     db.commit()
 # end account functions
 
+async def __getCurrentPrice(ticker: str) -> float:
+    return yf.download(ticker, interval = "1d", period="1d", progress=False)["Close"].iloc[-1]
+
 ## trade functions
 @app.put("/buy/", tags = ["trades"])
-async def buy_stock(botname: str, ticker: str, request: Request, db: Session = Depends(get_db), amount: float = -1):
+async def buy_stock(botname: str, ticker: str, 
+        request: Request, db: Session = Depends(get_db), amount: float = -1,
+        amountInUSD: bool = False):
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
     if ticker not in ALLOWED_STOCKS:
         raise HTTPException(status_code=400, detail="Ticker not allowed")
     # get current price
-    currentPrice = yf.download(ticker, interval = "1d", period="1d", progress=False)["Close"].iloc[-1]
+    currentPrice = await __getCurrentPrice(ticker)
     # check if bot has enough money
+    if amountInUSD:
+        amount = amount / currentPrice * (1 - COMMISSION)
     if bot.portfolio["USD"] < amount * currentPrice:
         raise HTTPException(status_code=400, detail="Not enough money")
     # add trade on bot
@@ -164,7 +186,9 @@ async def buy_stock(botname: str, ticker: str, request: Request, db: Session = D
     return bot.portfolio
 
 @app.put("/sell/", tags = ["trades"])
-async def sell_stock(botname: str, ticker: str, request: Request, db: Session = Depends(get_db), amount: float = -1):
+async def sell_stock(botname: str, ticker: str, 
+        request: Request, db: Session = Depends(get_db), amount: float = -1,
+        amountInUSD: bool = False):
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -177,6 +201,8 @@ async def sell_stock(botname: str, ticker: str, request: Request, db: Session = 
         raise HTTPException(status_code=404, detail="you do not own that stock to sell")
     if amount == -1:
         amount = bot.portfolio[ticker]
+    if amountInUSD:
+        amount = amount / currentPrice * (1 - COMMISSION)
     if bot.portfolio[ticker] < amount:
         raise HTTPException(status_code=400, detail="Not enough stock. you wanted: %.2f, you have: %.2f" % (amount, bot.portfolio[ticker]))
 
@@ -220,3 +246,4 @@ async def get_data(GetData: GetTradeDataPD, request: Request, db: Session = Depe
         # df = df.fillna(0)
         stockdata = df.to_dict(orient="records")
     return stockdata
+
