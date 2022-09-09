@@ -16,7 +16,7 @@ import pandas as pd
 import yfinance as yf
 
 from db import get_db, StockData, Bot, Trade, TechnicalAnalysis, \
-        BotPD, StockDataPD, TradePD, TechnicalAnalysisPD, NewBotPD, GetTradeDataPD
+        BotPD, StockDataPD, TradePD, TechnicalAnalysisPD, NewBotPD, GetTradeDataPD, TAType
 
 app = FastAPI()
 
@@ -247,3 +247,6 @@ async def get_data(GetData: GetTradeDataPD, request: Request, db: Session = Depe
         stockdata = df.to_dict(orient="records")
     return stockdata
 
+@app.get("/data/ta_options")
+async def get_ta_options(request: Request):
+    return [x.value for x in TAType]

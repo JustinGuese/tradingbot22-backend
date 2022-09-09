@@ -12,5 +12,15 @@ services:
     volumes:
       - postgres-tradingbot:/var/lib/postgresql/data
 
+  tradingbot-baseimage:
+    image: guestros/tradingbot22-backend:latest
+    build: .
+    container_name: tradingbot-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PSQL_URL=postgres:postgres@postgres:5432/postgres
+
+
 volumes:
   postgres-tradingbot:
