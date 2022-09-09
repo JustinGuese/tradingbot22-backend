@@ -3,8 +3,9 @@ from fastapi import (Depends, FastAPI, HTTPException, Query, Request, Response,
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import APIKeyCookie, OAuth2AuthorizationCodeBearer
 from tqdm import tqdm
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 import warnings
+import json
 
 
 from ta import add_all_ta_features
@@ -15,7 +16,7 @@ import pandas as pd
 import yfinance as yf
 
 from db import get_db, StockData, Bot, Trade, TechnicalAnalysis, \
-        BotPD, StockDataPD, TradePD, TechnicalAnalysisPD, NewBotPD
+        BotPD, StockDataPD, TradePD, TechnicalAnalysisPD, NewBotPD, GetTradeDataPD
 
 app = FastAPI()
 
@@ -194,3 +195,28 @@ async def sell_stock(botname: str, ticker: str, request: Request, db: Session = 
     db.add(trade)
     db.commit()
     return bot.portfolio
+
+# data requests
+@app.post("/data/")
+async def get_data(GetData: GetTradeDataPD, request: Request, db: Session = Depends(get_db)):
+    if GetData.ticker not in ALLOWED_STOCKS:
+        raise HTTPException(status_code=400, detail="Ticker not allowed")
+    stockdata = db.query(StockData).filter(StockData.ticker == GetData.ticker,
+        StockData.timestamp >= GetData.start_date,
+        StockData.timestamp <= GetData.end_date).all()
+    if len(GetData.technical_analysis_columns) > 0:
+        # make this a join query in the future
+        sql = """SELECT stock_data."timestamp", stock_data.ticker, stock_data."open", stock_data.high, stock_data.low, stock_data."close", stock_data.volume, stock_data.adj_close %s
+            FROM stock_data
+            inner join technical_analysis ta on stock_data.ticker = ta.ticker and stock_data."timestamp"  = ta."timestamp" 
+            WHERE stock_data.ticker = '%s' AND stock_data."timestamp" >= '%s' AND stock_data."timestamp" <= '%s'
+            """
+        ta_columns = [x.value for x in GetData.technical_analysis_columns]
+        tadditions = ""
+        for col in ta_columns:
+            tadditions += ', ta."%s"' % col
+        sql = sql % (tadditions, GetData.ticker, GetData.start_date, GetData.end_date)
+        df = pd.read_sql_query(sql, db.bind)
+        # df = df.fillna(0)
+        stockdata = df.to_dict(orient="records")
+    return stockdata
