@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+
+
+  labels:
+    io.kompose.service: tradingbot-baseimage
+  name: tradingbot-baseimage
+  namespace: tradingbot22
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: tradingbot-baseimage
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        io.kompose.service: tradingbot-baseimage
+    spec:
+      containers:
+        - env:
+            - name: PSQL_URL
+              value: postgres:postgres@postgres-service:5432/postgres # i mean it's a prototype so come on
+          image: guestros/tradingbot22-backend:latest
+          name: tradingbot-backend
+          ports:
+            - containerPort: 8000
+          resources: {}
+      restartPolicy: Always
+status: {}

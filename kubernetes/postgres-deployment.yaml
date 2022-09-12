@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+
+
+  labels:
+    service: postgres
+  name: postgres
+  namespace: tradingbot22
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:    
+      labels:
+        service: postgres
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_USER
+              value: postgres
+          image: postgres:alpine
+          name: postgres
+          ports:
+            - containerPort: 5432
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-tradingbot
+      restartPolicy: Always
+      volumes:
+        - name: postgres-tradingbot
+          persistentVolumeClaim:
+            claimName: postgres-tradingbot
+status: {}
