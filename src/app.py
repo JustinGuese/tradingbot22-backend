@@ -233,14 +233,15 @@ async def get_data(GetData: GetTradeDataPD, request: Request, db: Session = Depe
     if len(GetData.technical_analysis_columns) > 0:
         if "all" in GetData.technical_analysis_columns:
             # then grab all technical analysis columns available and replace "all" with them
-            GetData.technical_analysis_columns = TA_COLUMNS + ["SMA_3", "SMA_10", "SMA_50", "SMA_100", "SMA_200"]
+            ta_columns = TA_COLUMNS + ["SMA_3", "SMA_10", "SMA_50", "SMA_100", "SMA_200"]
+        else:
+            ta_columns = [x.value for x in GetData.technical_analysis_columns]
         # make this a join query in the future
         sql = """SELECT stock_data."timestamp", stock_data.ticker, stock_data."open", stock_data.high, stock_data.low, stock_data."close", stock_data.volume, stock_data.adj_close %s
             FROM stock_data
             inner join technical_analysis ta on stock_data.ticker = ta.ticker and stock_data."timestamp"  = ta."timestamp" 
             WHERE stock_data.ticker = '%s' AND stock_data."timestamp" >= '%s' AND stock_data."timestamp" <= '%s'
             """
-        ta_columns = [x.value for x in GetData.technical_analysis_columns]
         tadditions = ""
         for col in ta_columns:
             tadditions += ', ta."%s"' % col
