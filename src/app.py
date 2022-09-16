@@ -246,8 +246,9 @@ async def get_data(GetData: GetTradeDataPD, request: Request, db: Session = Depe
         for col in ta_columns:
             tadditions += ', ta."%s"' % col
         sql = sql % (tadditions, GetData.ticker, GetData.start_date, GetData.end_date)
+        # error: out of range float values are not json compatible
         df = pd.read_sql_query(sql, db.bind)
-        # df = df.fillna(0)
+        df = df.fillna(method="bfill")
         stockdata = df.to_dict(orient="records")
     return stockdata
 
