@@ -1,22 +1,20 @@
+import json
+import warnings
+
+import pandas as pd
+import yfinance as yf
 from fastapi import (Depends, FastAPI, HTTPException, Query, Request, Response,
                      status)
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import APIKeyCookie, OAuth2AuthorizationCodeBearer
-from tqdm import tqdm
 from sqlalchemy.orm import Session, load_only
-import warnings
-import json
-
-
 from ta import add_all_ta_features
 from ta.utils import dropna
+from tqdm import tqdm
 
-import pandas as pd
-
-import yfinance as yf
-
-from db import get_db, StockData, Bot, Trade, TechnicalAnalysis, \
-        BotPD, StockDataPD, TradePD, TechnicalAnalysisPD, NewBotPD, GetTradeDataPD, TAType, TA_COLUMNS
+from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
+                StockDataPD, TAType, TechnicalAnalysis, TechnicalAnalysisPD,
+                Trade, TradePD, get_db)
 
 app = FastAPI()
 
@@ -24,7 +22,7 @@ app = FastAPI()
 # IWDA.AS = iShares Core MSCI World UCITS ETF USD (Acc)
 # EEM = iShares MSCI Emerging Markets ETF (EEM)
 ALLOWED_STOCKS = [
-    "AAPL", "MSFT", "GOOG", "TSLA",  # stocks
+    "AAPL", "MSFT", "GOOG", "TSLA", 'AMD', 'AMZN', 'DG', 'KDP', 'LLY', 'NOC', 'NVDA', 'PGR', 'TEAM', 'UNH', 'WM'  # stocks
     "CWEG.L", "IWDA.AS", "EEM", # etfs
     "BTC-USD", "ETH-USD", "AVAX-USD" # crypto
 ]
