@@ -258,4 +258,5 @@ async def get_ta_options(request: Request):
 async def get_current_price(ticker: str, request: Request):
     if ticker not in ALLOWED_STOCKS:
         raise HTTPException(status_code=400, detail="Ticker not allowed")
-    return await float(__getCurrentPrice(ticker))
+    price = await __getCurrentPrice(ticker)
+    return float(price)
