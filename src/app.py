@@ -22,7 +22,7 @@ app = FastAPI()
 # IWDA.AS = iShares Core MSCI World UCITS ETF USD (Acc)
 # EEM = iShares MSCI Emerging Markets ETF (EEM)
 ALLOWED_STOCKS = [
-    "AAPL", "MSFT", "GOOG", "TSLA", 'AMD', 'AMZN', 'DG', 'KDP', 'LLY', 'NOC', 'NVDA', 'PGR', 'TEAM', 'UNH', 'WM'  # stocks
+    "AAPL", "MSFT", "GOOG", "TSLA", 'AMD', 'AMZN', 'DG', 'KDP', 'LLY', 'NOC', 'NVDA', 'PGR', 'TEAM', 'UNH', 'WM',  # stocks
     "CWEG.L", "IWDA.AS", "EEM", # etfs
     "BTC-USD", "ETH-USD", "AVAX-USD" # crypto
 ]
