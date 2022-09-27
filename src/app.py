@@ -253,3 +253,9 @@ async def get_data(GetData: GetTradeDataPD, request: Request, db: Session = Depe
 @app.get("/data/ta_options")
 async def get_ta_options(request: Request):
     return [x.value for x in TAType]
+
+@app.get("/data/current_price/{ticker}")
+async def get_current_price(ticker: str, request: Request):
+    if ticker not in ALLOWED_STOCKS:
+        raise HTTPException(status_code=400, detail="Ticker not allowed")
+    return await float(__getCurrentPrice(ticker))

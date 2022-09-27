@@ -1,19 +1,18 @@
 from datetime import date, datetime, timedelta
+from enum import Enum
 from os import environ
 from typing import List, Optional
 
-from pydantic import BaseModel
-from sqlalchemy import (JSON, Boolean, Column, Date, DateTime, Float, Integer,
-                        String, create_engine, ForeignKey)
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.types import BigInteger
-from sqlalchemy.ext.mutable import MutableDict
-
-from enum import Enum
-
-from pydantic_sqlalchemy import sqlalchemy_to_pydantic
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from pydantic_sqlalchemy import sqlalchemy_to_pydantic
+from sqlalchemy import (JSON, Boolean, Column, Date, DateTime, Float,
+                        ForeignKey, Integer, String, create_engine)
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.types import BigInteger
+
 load_dotenv()
 
 DATABASE_URL = "postgresql+psycopg2://" + environ["PSQL_URL"] # user:password@postgresserver/db
@@ -39,6 +38,10 @@ def get_db():
         yield db
     finally:
         db.close()
+        
+class Stock(Base):
+    __tablename__ = "stocks"
+    ticker = Column(String, primary_key=True)
 
 # class bot
 class Bot(Base):
