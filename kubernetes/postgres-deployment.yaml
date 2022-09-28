@@ -5,6 +5,8 @@ metadata:
     service: postgres
   name: postgres
   namespace: tradingbot22
+  annotations:
+    backup.velero.io/backup-volumes: postgres-tradingbot
 spec:
   replicas: 1
   selector:
