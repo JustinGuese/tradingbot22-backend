@@ -93,6 +93,16 @@ async def __update(db: Session):
 @app.get("/update")
 async def update(db: Session = Depends(get_db)):
     await __update(db)
+    
+@app.get("/update/portfolioworth")
+async def update_portfolioworth(db: Session = Depends(get_db)):
+    # first get all bots
+    allBots = db.query(Bot).all()
+    for bot in allBots:
+        worth = await get_portfolio_worth(bot, db)
+        bot.portfolioWorth = worth
+        db.commit()
+    
 
 ## account functions
 @app.put("/bot/", tags = ["account"])
@@ -107,6 +117,9 @@ async def create_bot(bot: NewBotPD, request: Request, db: Session = Depends(get_
 @app.get("/bot/", response_model=list[BotPD], tags = ["account"])
 async def get_bots(request: Request, db: Session = Depends(get_db)):
     bots = db.query(Bot).all()
+    # TODO: sort by portfolio worth
+    bots = [BotPD.from_orm(bot) for bot in bots]
+    bots = sorted(bots, key=lambda bot: bot.portfolioWorth, reverse=True)
     return bots
 
 # get specific bot

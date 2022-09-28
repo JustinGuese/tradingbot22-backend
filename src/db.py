@@ -51,6 +51,7 @@ class Bot(Base):
     description = Column(String, default = "no description yet")
     startMoney = Column(Float, default = 10000)
     portfolio = Column(MutableDict.as_mutable(JSON), default = lambda: {"USD": 10000})
+    portfolioWorth = Column(Float, default = 10000.)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
