@@ -97,9 +97,9 @@ async def update(db: Session = Depends(get_db)):
 @app.get("/update/portfolioworth")
 async def update_portfolioworth(db: Session = Depends(get_db)):
     # first get all bots
-    allBots = db.query(Bot).all()
-    for bot in allBots:
-        worth = await get_portfolio_worth(bot, db)
+    bots = db.query(Bot).all()
+    for bot in bots:
+        worth = await __portfolioWorth(bot.name, db)
         bot.portfolioWorth = worth
         db.commit()
     
@@ -130,9 +130,7 @@ async def get_bot(botname: str, request: Request, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="Bot not found")
     return bot
 
-# get portfolio worth
-@app.get("/bot/{botname}/portfolioworth", tags = ["account"])
-async def get_portfolio_worth(botname: str, request: Request, db: Session = Depends(get_db)):
+async def __portfolioWorth(botname: str, db: Session):
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -143,7 +141,12 @@ async def get_portfolio_worth(botname: str, request: Request, db: Session = Depe
             worth += amount
         else:
             worth += await __getCurrentPrice(ticker) * amount
-    return {"worth": worth}
+    return worth
+
+# get portfolio worth
+@app.get("/bot/{botname}/portfolioworth", tags = ["account"])
+async def get_portfolio_worth(botname: str, request: Request, db: Session = Depends(get_db)):
+    return await __portfolioWorth(botname, db)
 
 # delete bot
 @app.delete("/bot/{botname}", tags = ["account"])

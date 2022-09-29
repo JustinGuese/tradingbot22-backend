@@ -18,4 +18,10 @@ spec:
             - /bin/sh
             - -ec
             - curl http://tradingbot-baseimage-service:8000/update
+          - name: tradingbot22-portfolioworth
+            image: buildpack-deps:curl
+            args:
+            - /bin/sh
+            - -ec
+            - curl http://tradingbot-baseimage-service:8000/update/portfolioworth
           restartPolicy: Never
