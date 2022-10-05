@@ -1,6 +1,7 @@
 import json
 import warnings
 
+import numpy as np
 import pandas as pd
 import yfinance as yf
 from fastapi import (Depends, FastAPI, HTTPException, Query, Request, Response,
@@ -262,7 +263,11 @@ async def get_data(GetData: GetTradeDataPD, request: Request, db: Session = Depe
         sql = sql % (tadditions, GetData.ticker, GetData.start_date, GetData.end_date)
         # error: out of range float values are not json compatible
         df = pd.read_sql_query(sql, db.bind)
+        df = df.replace([np.inf, -np.inf], np.nan)
         df = df.fillna(method="bfill")
+        # nan is not json compatible
+        df = df.fillna(method="ffill")
+        df = df.fillna(0)
         stockdata = df.to_dict(orient="records")
     return stockdata
 
