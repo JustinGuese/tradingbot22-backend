@@ -1,22 +1,17 @@
-import json
 import warnings
 from typing import List
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from fastapi import (Depends, FastAPI, HTTPException, Query, Request, Response,
-                     status)
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.security import APIKeyCookie, OAuth2AuthorizationCodeBearer
-from sqlalchemy.orm import Session, load_only
+from fastapi import Depends, FastAPI, HTTPException, Request
+from sqlalchemy.orm import Session
 from ta import add_all_ta_features
 from ta.utils import dropna
 from tqdm import tqdm
 
 from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
-                StockDataPD, TAType, TechnicalAnalysis, TechnicalAnalysisPD,
-                Trade, TradePD, get_db)
+                TAType, TechnicalAnalysis, Trade, get_db)
 
 app = FastAPI()
 
