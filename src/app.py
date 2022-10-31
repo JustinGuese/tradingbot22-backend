@@ -1,5 +1,6 @@
 import json
 import warnings
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -115,12 +116,22 @@ async def create_bot(bot: NewBotPD, request: Request, db: Session = Depends(get_
     db.add(botobj)
     db.commit()
 
-@app.get("/bot/", response_model=list[BotPD], tags = ["account"])
+@app.get("/bot/", response_model=List[BotPD], tags = ["account"])
 async def get_bots(request: Request, db: Session = Depends(get_db)):
     bots = db.query(Bot).all()
     # TODO: sort by portfolio worth
     bots = [BotPD.from_orm(bot) for bot in bots]
     bots = sorted(bots, key=lambda bot: bot.portfolioWorth, reverse=True)
+    return bots
+
+@app.get("/bot/byWorth", tags = ["account"])
+async def get_bots_byWorth(request: Request, db: Session = Depends(get_db)):
+    bots = db.query(Bot).all()
+    # TODO: sort by portfolio worth
+    bots = [BotPD.from_orm(bot) for bot in bots]
+    bots = sorted(bots, key=lambda bot: bot.portfolioWorth, reverse=True)
+    # only keep name and worth
+    bots = [{"name" : bot.name, "worth" : bot.portfolioWorth} for bot in bots]
     return bots
 
 # get specific bot
