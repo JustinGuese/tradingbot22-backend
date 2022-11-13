@@ -1,4 +1,5 @@
 import warnings
+from datetime import datetime
 from typing import List
 
 import numpy as np
@@ -114,10 +115,17 @@ async def create_bot(bot: NewBotPD, request: Request, db: Session = Depends(get_
 @app.get("/bot/", response_model=List[BotPD], tags = ["account"])
 async def get_bots(request: Request, db: Session = Depends(get_db)):
     bots = db.query(Bot).all()
-    # TODO: sort by portfolio worth
     bots = [BotPD.from_orm(bot) for bot in bots]
     bots = sorted(bots, key=lambda bot: bot.portfolioWorth, reverse=True)
     return bots
+
+def calculatePctPerYear(portfolioWorth: float, start: datetime):
+    end = datetime.now()
+    months = (end.year - start.year) * 12 + (end.month - start.month)
+    totalPct = (portfolioWorth - 10000) / 10000 # 10000 is the starting amount
+    pctPerMonth = totalPct / months if months != 0 else 0
+    pctPerYear = pctPerMonth * 12 * 100
+    return round(pctPerYear)
 
 @app.get("/bot/byWorth", tags = ["account"])
 async def get_bots_byWorth(request: Request, db: Session = Depends(get_db)):
@@ -126,7 +134,7 @@ async def get_bots_byWorth(request: Request, db: Session = Depends(get_db)):
     bots = [BotPD.from_orm(bot) for bot in bots]
     bots = sorted(bots, key=lambda bot: bot.portfolioWorth, reverse=True)
     # only keep name and worth
-    bots = [{"name" : bot.name, "worth" : bot.portfolioWorth} for bot in bots]
+    bots = [{"name" : bot.name, "worth" : bot.portfolioWorth, 'pctPerYear': calculatePctPerYear(bot.portfolioWorth, bot.created_at)} for bot in bots]
     return bots
 
 # get specific bot
@@ -242,6 +250,10 @@ async def sell_stock(botname: str, ticker: str,
     db.add(trade)
     db.commit()
     return bot.portfolio
+
+@app.get('/data/tradeable-tickers', tags = ["data"])
+async def getTradeableTickers():
+    return ALLOWED_STOCKS
 
 # data requests
 @app.post("/data/")
