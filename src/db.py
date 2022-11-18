@@ -73,6 +73,7 @@ class Trade(Base):
     bot = Column(String, ForeignKey("bots.name", ondelete="CASCADE"))
     ticker = Column(String, index=True)
     buy = Column(Boolean)
+    short = Column(Boolean)
     price = Column(Float)
     quantity = Column(Integer)
 

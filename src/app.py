@@ -188,7 +188,7 @@ async def __getCurrentPrice(ticker: str) -> float:
 @app.put("/buy/", tags = ["trades"])
 async def buy_stock(botname: str, ticker: str, 
         request: Request, db: Session = Depends(get_db), amount: float = -1,
-        amountInUSD: bool = False):
+        amountInUSD: bool = False, allowShorts: bool = False):
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -201,8 +201,8 @@ async def buy_stock(botname: str, ticker: str,
         amount = amount / currentPrice * (1 - COMMISSION)
     if bot.portfolio["USD"] < amount * currentPrice:
         raise HTTPException(status_code=400, detail="Not enough money")
-    if amount <= 0:
-        raise HTTPException(status_code=400, detail="Amount must be positive. Shorts are not yet supported!")
+    if amount <= 0 and not allowShorts:
+        raise HTTPException(status_code=400, detail="Negative amount means short. you need to enable shorts by passing allowShorts=True")
     # add trade on bot
     # if amount == -1 then buy all we can
     if amount == -1:
@@ -211,13 +211,16 @@ async def buy_stock(botname: str, ticker: str,
         bot.portfolio[ticker] += amount
     else:
         bot.portfolio[ticker] = amount
-    bot.portfolio["USD"] -= amount * currentPrice * (1 + COMMISSION)
+        
+    # abs to support shorts and long
+    bot.portfolio["USD"] -= abs(amount) * currentPrice * (1 + COMMISSION)
     db.commit()
     # then create trade object
     trade = Trade(
             bot = botname,
             ticker = ticker,
             buy = True,
+            short = amount < 0,
             price = currentPrice,
             quantity = amount)
     db.add(trade)
@@ -227,7 +230,7 @@ async def buy_stock(botname: str, ticker: str,
 @app.put("/sell/", tags = ["trades"])
 async def sell_stock(botname: str, ticker: str, 
         request: Request, db: Session = Depends(get_db), amount: float = -1,
-        amountInUSD: bool = False):
+        amountInUSD: bool = False, allowShorts: bool = False):
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -242,14 +245,20 @@ async def sell_stock(botname: str, ticker: str,
         amount = bot.portfolio[ticker]
     if amountInUSD:
         amount = amount / currentPrice * (1 - COMMISSION)
-    if amount <= 0:
-        raise HTTPException(status_code=400, detail="Amount must be positive. Shorts are not yet supported!")
+    if amount <= 0 and not allowShorts:
+        raise HTTPException(status_code=400, detail="Negative amount means short. you need to enable shorts by passing allowShorts=True")
     if bot.portfolio[ticker] < amount:
         raise HTTPException(status_code=400, detail="Not enough stock. you wanted: %.2f, you have: %.2f" % (amount, bot.portfolio[ticker]))
 
     # add trade on bot
     bot.portfolio[ticker] -= amount
-    bot.portfolio["USD"] += amount * currentPrice * (1 - COMMISSION)
+    if amount > 0:
+        # long
+        bot.portfolio["USD"] += amount * currentPrice * (1 - COMMISSION)
+    else:
+        # short
+        bot.portfolio["USD"] -= amount * currentPrice * (1 - COMMISSION)
+    
     db.commit()
 
     # then create trade object
@@ -257,6 +266,7 @@ async def sell_stock(botname: str, ticker: str,
             bot = botname,
             ticker = ticker,
             buy = False,
+            short = amount < 0,
             price = currentPrice,
             quantity = amount)
     db.add(trade)
