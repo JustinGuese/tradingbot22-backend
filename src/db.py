@@ -70,7 +70,7 @@ class Trade(Base):
     __tablename__ = "trades"
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
-    bot = Column(String, ForeignKey("bots.name"))
+    bot = Column(String, ForeignKey("bots.name", ondelete="CASCADE"))
     ticker = Column(String, index=True)
     buy = Column(Boolean)
     price = Column(Float)

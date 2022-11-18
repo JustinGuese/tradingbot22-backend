@@ -169,8 +169,8 @@ async def delete_bot(botname: str, request: Request, db: Session = Depends(get_d
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
-    # db.delete(bot) # doesnt work yet due to dependencies... reset instead
-    bot.portfolio = {"USD":10000}
+    db.delete(bot) # doesnt work yet due to dependencies... reset instead
+    # bot.portfolio = {"USD":10000}
     db.commit()
 # end account functions
 
