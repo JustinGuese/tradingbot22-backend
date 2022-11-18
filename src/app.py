@@ -175,7 +175,14 @@ async def delete_bot(botname: str, request: Request, db: Session = Depends(get_d
 # end account functions
 
 async def __getCurrentPrice(ticker: str) -> float:
-    return yf.download(ticker, interval = "1d", period="1d", progress=False)["Close"].iloc[-1]
+    try:
+        df = yf.download(ticker, interval = "1d", period="1d", progress=False)
+        return df["Close"].iloc[-1]
+    except Exception as e:
+        print("problem with df: " + ticker)
+        print(df)
+        # TODO: log somehow
+        return 0.
 
 ## trade functions
 @app.put("/buy/", tags = ["trades"])
