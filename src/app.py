@@ -169,7 +169,8 @@ async def delete_bot(botname: str, request: Request, db: Session = Depends(get_d
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
-    db.delete(bot)
+    # db.delete(bot) # doesnt work yet due to dependencies... reset instead
+    bot.portfolio = {"USD":10000}
     db.commit()
 # end account functions
 
@@ -193,6 +194,8 @@ async def buy_stock(botname: str, ticker: str,
         amount = amount / currentPrice * (1 - COMMISSION)
     if bot.portfolio["USD"] < amount * currentPrice:
         raise HTTPException(status_code=400, detail="Not enough money")
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive. Shorts are not yet supported!")
     # add trade on bot
     # if amount == -1 then buy all we can
     if amount == -1:
@@ -232,6 +235,8 @@ async def sell_stock(botname: str, ticker: str,
         amount = bot.portfolio[ticker]
     if amountInUSD:
         amount = amount / currentPrice * (1 - COMMISSION)
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive. Shorts are not yet supported!")
     if bot.portfolio[ticker] < amount:
         raise HTTPException(status_code=400, detail="Not enough stock. you wanted: %.2f, you have: %.2f" % (amount, bot.portfolio[ticker]))
 
