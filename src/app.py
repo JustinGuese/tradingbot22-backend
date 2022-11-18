@@ -251,7 +251,7 @@ async def sell_stock(botname: str, ticker: str,
     db.commit()
     return bot.portfolio
 
-@app.get('/data/tradeable-tickers', tags = ["data"])
+@app.get('/data/tradeable-tickers', tags = ["data"], response_model=List[str])
 async def getTradeableTickers():
     return ALLOWED_STOCKS
 
