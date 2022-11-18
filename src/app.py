@@ -245,19 +245,29 @@ async def sell_stock(botname: str, ticker: str,
         amount = bot.portfolio[ticker]
     if amountInUSD:
         amount = amount / currentPrice * (1 - COMMISSION)
+    if bot.portfolio[ticker] < 0 and not allowShorts:
+        raise HTTPException(status_code=400, detail="This is a short. you need to enable short trading by passing allowShorts=True")
     if amount <= 0 and not allowShorts:
-        raise HTTPException(status_code=400, detail="Negative amount means short. you need to enable shorts by passing allowShorts=True")
+        raise HTTPException(status_code=400, detail="Negative amount means short. you need to enable short trading by passing allowShorts=True")
     if bot.portfolio[ticker] < amount:
         raise HTTPException(status_code=400, detail="Not enough stock. you wanted: %.2f, you have: %.2f" % (amount, bot.portfolio[ticker]))
 
     # add trade on bot
-    bot.portfolio[ticker] -= amount
-    if amount > 0:
-        # long
+    if amount > 0 and bot.portfolio[ticker] > 0:
+        # long, is no short
+        bot.portfolio[ticker] -= amount
         bot.portfolio["USD"] += amount * currentPrice * (1 - COMMISSION)
-    else:
+    elif bot.portfolio[ticker] < 0 and allowShorts:
         # short
-        bot.portfolio["USD"] -= amount * currentPrice * (1 - COMMISSION)
+        # we need to load the price from the db to calculate the profit
+        theBuyTrade = db.query(Trade).filter(Trade.bot == botname).filter(Trade.ticker == ticker).filter(Trade.buy == True).filter(Trade.short == True).order_by(Trade.id.desc()).first()
+        if theBuyTrade is None:
+            raise HTTPException(status_code=400, detail="could not find the matching buy order for that trade... ")
+        priceDiff = theBuyTrade.price - currentPrice
+        bot.portfolio[ticker] += abs(amount)
+        bot.portfolio["USD"] += priceDiff * abs(amount) * (1 - COMMISSION)
+    else:
+        raise ValueError("something went wrong with the short logic... case does not exist. terminal errro")
     
     db.commit()
 
