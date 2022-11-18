@@ -155,7 +155,27 @@ async def __portfolioWorth(botname: str, db: Session):
         if ticker == "USD":
             worth += amount
         else:
-            worth += await __getCurrentPrice(ticker) * amount
+            # need to calculate short worth
+            if amount == 0:
+                continue
+            elif amount > 0:
+                # long
+                worth += await __getCurrentPrice(ticker) * amount
+            else:
+                # short
+                try:
+                    crntPrice = await __getCurrentPrice(ticker)
+                    theBuyTrade = db.query(Trade).filter(Trade.bot == botname).filter(Trade.ticker == ticker).filter(Trade.buy == True).filter(Trade.short == True).order_by(Trade.id.desc()).first()
+                    if theBuyTrade is None:
+                        # no buy trade found, so we can't calculate the worth
+                        raise ValueError("No buy trade found for short position ", botname, " ", ticker)
+                    winSoFar = theBuyTrade.price - crntPrice
+                    worth += (theBuyTrade.price + winSoFar) * abs(amount)
+                except Exception as e:
+                    # TODO: log
+                    print(e)
+                    # at least assume it is a long
+                    worth += await __getCurrentPrice(ticker) * abs(amount)
     return worth
 
 # get portfolio worth
@@ -188,7 +208,7 @@ async def __getCurrentPrice(ticker: str) -> float:
 @app.put("/buy/", tags = ["trades"])
 async def buy_stock(botname: str, ticker: str, 
         request: Request, db: Session = Depends(get_db), amount: float = -1,
-        amountInUSD: bool = False, allowShorts: bool = False):
+        amountInUSD: bool = False, short: bool = False):
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -201,13 +221,23 @@ async def buy_stock(botname: str, ticker: str,
         amount = amount / currentPrice * (1 - COMMISSION)
     if bot.portfolio["USD"] < amount * currentPrice:
         raise HTTPException(status_code=400, detail="Not enough money")
-    if amount <= 0 and not allowShorts:
-        raise HTTPException(status_code=400, detail="Negative amount means short. you need to enable shorts by passing allowShorts=True")
     # add trade on bot
     # if amount == -1 then buy all we can
     if amount == -1:
         amount = bot.portfolio["USD"] / currentPrice * (1 - COMMISSION)
+    if amount < 0:
+        raise HTTPException(status_code=400, detail="Amount cant be negative")
+    if short:
+        amount = -amount
+        
     if ticker in bot.portfolio:
+        if bot.portfolio[ticker] > 0 and short:
+            # uhoh!
+            raise HTTPException(status_code=400, detail="Already long on this stock. cant open short. sell first")
+        elif bot.portfolio[ticker] < 0 and not short:
+            # uhoh!
+            raise HTTPException(status_code=400, detail="Already short on this stock. cant open long. sell first")
+        # this works for both long and short
         bot.portfolio[ticker] += amount
     else:
         bot.portfolio[ticker] = amount
@@ -220,7 +250,7 @@ async def buy_stock(botname: str, ticker: str,
             bot = botname,
             ticker = ticker,
             buy = True,
-            short = amount < 0,
+            short = short,
             price = currentPrice,
             quantity = amount)
     db.add(trade)
@@ -230,7 +260,7 @@ async def buy_stock(botname: str, ticker: str,
 @app.put("/sell/", tags = ["trades"])
 async def sell_stock(botname: str, ticker: str, 
         request: Request, db: Session = Depends(get_db), amount: float = -1,
-        amountInUSD: bool = False, allowShorts: bool = False):
+        amountInUSD: bool = False, short: bool = False):
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -241,33 +271,35 @@ async def sell_stock(botname: str, ticker: str,
     # check if bot has enough stock
     if ticker not in bot.portfolio:
         raise HTTPException(status_code=404, detail="you do not own that stock to sell")
+    if amount < 0 and amount != -1:
+        raise HTTPException(status_code=400, detail="Amount cant be negative. is: " + str(amount))
     if amount == -1:
         amount = bot.portfolio[ticker]
+    if bot.portfolio[ticker] == 0:
+        raise HTTPException(status_code=400, detail="you do not own that stock to sell")
     if amountInUSD:
         amount = amount / currentPrice * (1 - COMMISSION)
-    if bot.portfolio[ticker] < 0 and not allowShorts:
-        raise HTTPException(status_code=400, detail="This is a short. you need to enable short trading by passing allowShorts=True")
-    if amount <= 0 and not allowShorts:
-        raise HTTPException(status_code=400, detail="Negative amount means short. you need to enable short trading by passing allowShorts=True")
-    if bot.portfolio[ticker] < amount:
+    if bot.portfolio[ticker] < 0 and not short:
+        raise HTTPException(status_code=400, detail="This is a short. you need to enable short trading by passing short=True")
+    if bot.portfolio[ticker] > 0 and short:
+        raise HTTPException(status_code=400, detail="This is a long. you need to disable short trading by passing short=False")
+    if (abs(bot.portfolio[ticker]) - abs(amount)) < 0:
         raise HTTPException(status_code=400, detail="Not enough stock. you wanted: %.2f, you have: %.2f" % (amount, bot.portfolio[ticker]))
 
     # add trade on bot
-    if amount > 0 and bot.portfolio[ticker] > 0:
+    if bot.portfolio[ticker] > 0:
         # long, is no short
         bot.portfolio[ticker] -= amount
         bot.portfolio["USD"] += amount * currentPrice * (1 - COMMISSION)
-    elif bot.portfolio[ticker] < 0 and allowShorts:
+    elif bot.portfolio[ticker] < 0 and short:
         # short
         # we need to load the price from the db to calculate the profit
         theBuyTrade = db.query(Trade).filter(Trade.bot == botname).filter(Trade.ticker == ticker).filter(Trade.buy == True).filter(Trade.short == True).order_by(Trade.id.desc()).first()
-        if theBuyTrade is None:
-            raise HTTPException(status_code=400, detail="could not find the matching buy order for that trade... ")
-        priceDiff = theBuyTrade.price - currentPrice
+        diff = theBuyTrade.price - currentPrice
+        bot.portfolio["USD"] += (theBuyTrade.price + diff) * abs(amount) * (1 - COMMISSION)
         bot.portfolio[ticker] += abs(amount)
-        bot.portfolio["USD"] += priceDiff * abs(amount) * (1 - COMMISSION)
     else:
-        raise ValueError("something went wrong with the short logic... case does not exist. terminal errro")
+        raise ValueError("this really shouldnt happen... logic for short that is not implemted")
     
     db.commit()
 
@@ -276,7 +308,7 @@ async def sell_stock(botname: str, ticker: str,
             bot = botname,
             ticker = ticker,
             buy = False,
-            short = amount < 0,
+            short = short,
             price = currentPrice,
             quantity = amount)
     db.add(trade)
