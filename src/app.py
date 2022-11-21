@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
                 TAType, TechnicalAnalysis, Trade, get_db)
+from elastic import logToElastic
 
 app = FastAPI()
 
@@ -100,7 +101,13 @@ async def update_portfolioworth(db: Session = Depends(get_db)):
         worth = await __portfolioWorth(bot.name, db)
         bot.portfolioWorth = worth
         db.commit()
-    
+        # and try to log 2 elastic if it's up (otherwise it will just skip)
+        logToElastic("tradingbot22_portfolioWorth", {
+            "botName" : bot.name, "portfolioWorth" : worth, 
+            "timestamp" : datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "pctPerYear" : calculatePctPerYear(worth, bot.start),
+            "portfolio" : bot.portfolio
+            })
 
 ## account functions
 @app.put("/bot/", tags = ["account"])
@@ -255,6 +262,16 @@ async def buy_stock(botname: str, ticker: str,
             quantity = amount)
     db.add(trade)
     db.commit()
+    # and finally log 2 elastic, silently fails if not reachable
+    logToElastic("tradingbot22_trades", {
+            "botName" : bot.name, 
+            "timestamp" : datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "ticker": ticker,
+            "buy": True,
+            "short": short,
+            "price": currentPrice,
+            "quantity": amount
+            })
     return bot.portfolio
 
 @app.put("/sell/", tags = ["trades"])
@@ -313,6 +330,16 @@ async def sell_stock(botname: str, ticker: str,
             quantity = amount)
     db.add(trade)
     db.commit()
+    # and finally log 2 elastic, silently fails if not reachable
+    logToElastic("tradingbot22_trades", {
+            "botName" : bot.name, 
+            "timestamp" : datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "ticker": ticker,
+            "buy": False,
+            "short": short,
+            "price": currentPrice,
+            "quantity": amount
+            })
     return bot.portfolio
 
 @app.get('/data/tradeable-tickers', tags = ["data"], response_model=List[str])
