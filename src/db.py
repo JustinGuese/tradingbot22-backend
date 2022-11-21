@@ -300,6 +300,21 @@ class TechnicalAnalysis(Base):
     SMA_50 = Column(Float)
     SMA_100 = Column(Float)
     SMA_200 = Column(Float)
+    
+class News(Base):
+    __tablename__ = "news"
+    uuid = Column(String, primary_key=True, index=True)
+    timestamp = Column(DateTime, index=True)
+    ticker = Column(String, index=True)
+    title = Column(String)
+    publisher = Column(String)
+    related_tickers = Column(String)
+    total_score = Column(Float)
+    title_pos_score = Column(Float)
+    title_neg_score = Column(Float)
+    article_pos_score = Column(Float)
+    article_neg_score = Column(Float)
+    
 
 BotPD = sqlalchemy_to_pydantic(Bot)
 StockDataPD = sqlalchemy_to_pydantic(StockData)

@@ -9,3 +9,6 @@ pandas
 ta
 tqdm
 elasticsearch
+nltk
+beautifulsoup4
+requests

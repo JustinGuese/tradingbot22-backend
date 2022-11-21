@@ -14,6 +14,7 @@ from tqdm import tqdm
 from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
                 TAType, TechnicalAnalysis, Trade, get_db)
 from elastic import logToElastic
+from language import updateNews
 
 app = FastAPI()
 
@@ -88,6 +89,13 @@ async def __update(db: Session):
             except Exception as e:
                 print("TA SQL insert error with: " + ticker)
                 print(e)
+        # next news sentiment update
+        try:
+            updateNews(ticker, db)
+        except Exception as e:
+            print("problem in news update: " + ticker)
+            print(e)
+            raise
 
 @app.get("/update")
 async def update(db: Session = Depends(get_db)):
