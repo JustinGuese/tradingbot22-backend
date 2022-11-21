@@ -3,7 +3,7 @@ from os import environ
 from elasticsearch import Elasticsearch
 
 try:
-    ES = Elasticsearch(environ.get("ES_HOST", "https://elasticsearch-service.elk.svc.cluster.local:9200"))
+    ES = Elasticsearch(environ.get("ES_HOST", "http://elasticsearch-service.elk.svc.cluster.local:9200"))
 except Exception as e:
     print(e)
     ES = None

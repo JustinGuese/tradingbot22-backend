@@ -22,7 +22,7 @@ app = FastAPI()
 # EEM = iShares MSCI Emerging Markets ETF (EEM)
 ALLOWED_STOCKS = [
     "AAPL", "MSFT", "GOOG", "TSLA", 'AMD', 'AMZN', 'DG', 'KDP', 'LLY', 'NOC', 'NVDA', 'PGR', 'TEAM', 'UNH', 'WM',  # stocks
-    "CWEG.L", "IWDA.AS", "EEM", # etfs
+    "URTH", "IWDA.AS", "EEM", # etfs
     "BTC-USD", "ETH-USD", "AVAX-USD" # crypto
 ]
 # interactive brokers 0.05% of Trade Value
@@ -102,10 +102,10 @@ async def update_portfolioworth(db: Session = Depends(get_db)):
         bot.portfolioWorth = worth
         db.commit()
         # and try to log 2 elastic if it's up (otherwise it will just skip)
-        logToElastic("tradingbot22_portfolioWorth", {
+        logToElastic("tradingbot22_portfolio_worth", {
             "botName" : bot.name, "portfolioWorth" : worth, 
-            "timestamp" : datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-            "pctPerYear" : calculatePctPerYear(worth, bot.start),
+            "@timestamp" : datetime.utcnow().isoformat(),
+            "pctPerYear" : calculatePctPerYear(worth, bot.created_at),
             "portfolio" : bot.portfolio
             })
 
@@ -265,7 +265,7 @@ async def buy_stock(botname: str, ticker: str,
     # and finally log 2 elastic, silently fails if not reachable
     logToElastic("tradingbot22_trades", {
             "botName" : bot.name, 
-            "timestamp" : datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "@timestamp" : datetime.utcnow().isoformat(),
             "ticker": ticker,
             "buy": True,
             "short": short,
@@ -333,7 +333,7 @@ async def sell_stock(botname: str, ticker: str,
     # and finally log 2 elastic, silently fails if not reachable
     logToElastic("tradingbot22_trades", {
             "botName" : bot.name, 
-            "timestamp" : datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "@timestamp" : datetime.utcnow().isoformat(),
             "ticker": ticker,
             "buy": False,
             "short": short,
