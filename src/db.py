@@ -3,7 +3,6 @@ from enum import Enum
 from os import environ
 from typing import List, Optional
 
-from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
 from sqlalchemy import (JSON, Boolean, Column, Date, DateTime, Float,
@@ -13,9 +12,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.types import BigInteger
 
-load_dotenv()
-
-DATABASE_URL = "postgresql+psycopg2://" + environ["PSQL_URL"] # user:password@postgresserver/db
+DATABASE_URL = "postgresql+psycopg2://" + environ.get("PSQL_URL", "postgres:postgres@192.168.178.36:31432/postgres") # user:password@postgresserver/db
 
 engine = create_engine(DATABASE_URL,
     pool_pre_ping=True,
@@ -307,13 +304,9 @@ class News(Base):
     timestamp = Column(DateTime, index=True)
     ticker = Column(String, index=True)
     title = Column(String)
-    publisher = Column(String)
-    related_tickers = Column(String)
     total_score = Column(Float)
-    title_pos_score = Column(Float)
-    title_neg_score = Column(Float)
-    article_pos_score = Column(Float)
-    article_neg_score = Column(Float)
+    pos_score = Column(Float)
+    neg_score = Column(Float)
     
 
 BotPD = sqlalchemy_to_pydantic(Bot)

@@ -9,6 +9,6 @@ pandas
 ta
 tqdm
 elasticsearch
+newspaper3k
+GoogleNews
 nltk
-beautifulsoup4
-requests
