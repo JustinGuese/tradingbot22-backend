@@ -1,5 +1,6 @@
 import datetime as dt
 from hashlib import sha256
+from time import sleep
 
 import nltk
 import pandas as pd
@@ -33,6 +34,7 @@ def summarize(df: pd.DataFrame):
                 article.download() #downloading the article 
                 article.parse() #parsing the article
                 article.nlp() #performing natural language processing (nlp)
+                sleep(.5)
             except:
                 pass 
             #storing results in our empty dictionary
@@ -119,7 +121,7 @@ def getSentiment(ticker: str, news_df: pd.DataFrame) -> pd.DataFrame:
     full = full.drop_duplicates(subset=['title', 'ticker'], keep='first')
     return full
 
-def updateNews(ticker: str, db: Session):
+def updateNews(ticker: str, db: Session, lastTry = False):
     #Extract News with Google News
     googlenews = GoogleNews(start=yesterday,end=now)
     googlenews.search(ticker)
@@ -128,8 +130,14 @@ def updateNews(ticker: str, db: Session):
     df = pd.DataFrame(result)
     news_df = summarize(df)
     if news_df is None:
-        print("No news found for %s" % ticker)
-        return None
+        print("No news found for %s. try again after 2 sec wait" % ticker)
+        # can be the reason bc we get 429 too many requests... wait and try again
+        if not lastTry:
+            sleep(2)
+            return updateNews(ticker, db, lastTry = True)
+        else:
+            print("No news found for %s. skip" % ticker)
+            return
     fullDf = getSentiment(ticker, news_df)
     # next write 2 db
     for index, row in fullDf.iterrows():

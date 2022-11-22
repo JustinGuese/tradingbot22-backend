@@ -308,6 +308,14 @@ class News(Base):
     pos_score = Column(Float)
     neg_score = Column(Float)
     
+class Recommendation(Base):
+    __tablename__ = "expert_recommendation"
+    timestamp = Column(DateTime, primary_key=True, index=True)
+    ticker = Column(String, primary_key=True, index=True)
+    company = Column(String, primary_key=True, index=True)
+    rating = Column(String)
+    rating_before = Column(String)
+    action = Column(String)
 
 BotPD = sqlalchemy_to_pydantic(Bot)
 StockDataPD = sqlalchemy_to_pydantic(StockData)

@@ -15,6 +15,7 @@ from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
                 TAType, TechnicalAnalysis, Trade, get_db)
 from elastic import logToElastic
 from language import updateNews
+from yfrecommendations import getRecommendations
 
 app = FastAPI()
 
@@ -94,6 +95,13 @@ async def __update(db: Session):
             updateNews(ticker, db)
         except Exception as e:
             print("problem in news update: " + ticker)
+            print(e)
+            raise
+        # next get recommendation update
+        try:
+            getRecommendations(ticker, db)
+        except Exception as e:
+            print("problem in recommendation update: " + ticker)
             print(e)
             raise
 
