@@ -96,14 +96,12 @@ async def __update(db: Session):
         except Exception as e:
             print("problem in news update: " + ticker)
             print(e)
-            raise
         # next get recommendation update
         try:
             getRecommendations(ticker, db)
         except Exception as e:
             print("problem in recommendation update: " + ticker)
             print(e)
-            raise
 
 @app.get("/update")
 async def update(db: Session = Depends(get_db)):
