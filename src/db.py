@@ -5,8 +5,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
-from sqlalchemy import (JSON, Boolean, Column, Date, DateTime, Float,
-                        ForeignKey, Integer, String, create_engine)
+from sqlalchemy import (JSON, BigInteger, Boolean, Column, Date, DateTime,
+                        Float, ForeignKey, Integer, String, create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship, sessionmaker
@@ -298,6 +298,8 @@ class TechnicalAnalysis(Base):
     SMA_100 = Column(Float)
     SMA_200 = Column(Float)
     
+## news
+    
 class News(Base):
     __tablename__ = "news"
     uuid = Column(String, primary_key=True, index=True)
@@ -308,6 +310,8 @@ class News(Base):
     pos_score = Column(Float)
     neg_score = Column(Float)
     
+## recommendations / analyst ratings
+    
 class Recommendation(Base):
     __tablename__ = "expert_recommendation"
     timestamp = Column(DateTime, primary_key=True, index=True)
@@ -316,6 +320,55 @@ class Recommendation(Base):
     rating = Column(String)
     rating_before = Column(String)
     action = Column(String)
+
+## earnings
+
+class EarningDates(Base):
+    __tablename__ = "earning_dates"
+    timestamp = Column(DateTime, primary_key=True, index=True)
+    ticker = Column(String, primary_key=True, index=True)
+    earnings_avg = Column(Float)
+    earnings_low = Column(Float)
+    earnings_high = Column(Float)
+    # rev
+    revenue_avg = Column(BigInteger) # might need bigint
+    revenue_low = Column(BigInteger)
+    revenue_high = Column(BigInteger)
+
+class QuarterlyFinancials(Base):
+    __tablename__ = "quarterly_financials"
+    timestamp = Column(Date, primary_key=True, index=True)
+    ticker = Column(String, primary_key=True, index=True)
+    # the values
+    research_development  = Column(BigInteger, nullable=True)
+    effect_of_accounting_charges  = Column(BigInteger, nullable=True)
+    income_before_tax  = Column(BigInteger, nullable=True)
+    minority_interest  = Column(BigInteger, nullable=True)
+    net_income  = Column(BigInteger, nullable=True)
+    selling_general_administrative  = Column(BigInteger, nullable=True)
+    gross_profit  = Column(BigInteger, nullable=True)
+    ebit  = Column(BigInteger, nullable=True)
+    operating_income  = Column(BigInteger, nullable=True)
+    other_operating_expenses  = Column(BigInteger, nullable=True)
+    interest_expense  = Column(BigInteger, nullable=True)
+    extraordinary_items  = Column(BigInteger, nullable=True)
+    non_recurring  = Column(BigInteger, nullable=True)
+    other_items  = Column(BigInteger, nullable=True)
+    income_tax_expense  = Column(BigInteger, nullable=True)
+    total_revenue  = Column(BigInteger, nullable=True)
+    total_operating_expenses  = Column(BigInteger, nullable=True)
+    cost_of_revenue  = Column(BigInteger, nullable=True)
+    total_other_income_expense_net  = Column(BigInteger, nullable=True)
+    discontinued_operations  = Column(BigInteger, nullable=True)
+    net_income_from_continuing_ops  = Column(BigInteger, nullable=True)
+    net_income_applicable_to_common_shares  = Column(BigInteger, nullable=True)
+
+
+
+
+
+
+## pydantic #########
 
 BotPD = sqlalchemy_to_pydantic(Bot)
 StockDataPD = sqlalchemy_to_pydantic(StockData)

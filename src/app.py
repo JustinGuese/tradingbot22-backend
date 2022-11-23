@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
                 TAType, TechnicalAnalysis, Trade, get_db)
+from earnings import updateEarnings
 from elastic import logToElastic
 from language import updateNews
 from yfrecommendations import getRecommendations
@@ -90,6 +91,9 @@ async def __update(db: Session):
             except Exception as e:
                 print("TA SQL insert error with: " + ticker)
                 print(e)
+        # grab earnings updates
+        updateEarnings(ticker, db)
+                
         # next news sentiment update
         try:
             updateNews(ticker, db)
