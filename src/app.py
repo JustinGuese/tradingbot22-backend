@@ -408,3 +408,7 @@ async def get_current_price(ticker: str, request: Request):
         raise HTTPException(status_code=400, detail="Ticker not allowed")
     price = await __getCurrentPrice(ticker)
     return float(price)
+
+@app.get("/healthz")
+async def healthcheck():
+    return "yo whattup?"

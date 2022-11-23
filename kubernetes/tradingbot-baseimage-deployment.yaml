@@ -27,5 +27,11 @@ spec:
           ports:
             - containerPort: 8000
           resources: {}
+          livenessProbe:
+            exec:
+              command:
+              - curl --fail http://localhost:8000/healthz || exit 1
+            initialDelaySeconds: 5
+            periodSeconds: 300
       restartPolicy: Always
 status: {}
