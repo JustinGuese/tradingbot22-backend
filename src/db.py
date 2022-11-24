@@ -363,7 +363,14 @@ class QuarterlyFinancials(Base):
     net_income_from_continuing_ops  = Column(BigInteger, nullable=True)
     net_income_applicable_to_common_shares  = Column(BigInteger, nullable=True)
 
-
+# quarterly financial effect storage
+class QuarterlyFinancialsEffect(Base):
+    __tablename__ = "quarterly_financials_effect"
+    ticker = Column(String, primary_key=True, index=True, unique=True)
+    medchange = Column(Float)
+    medvariance = Column(Float)
+    all_changes_list = Column(String)
+    best = Column(MutableDict.as_mutable(JSON))
 
 
 

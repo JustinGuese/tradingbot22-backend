@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
                 TAType, TechnicalAnalysis, Trade, get_db)
-from earnings import updateEarnings
+from earnings import updateEarningEffect, updateEarnings
 from elastic import logToElastic
 from language import updateNews
 from yfrecommendations import getRecommendations
@@ -126,6 +126,10 @@ async def update_portfolioworth(db: Session = Depends(get_db)):
             "pctPerYear" : calculatePctPerYear(worth, bot.created_at),
             "portfolio" : bot.portfolio
             })
+        
+@app.get("/update/earningeffects")
+async def update_earningeffects(db: Session = Depends(get_db)):
+    updateEarningEffect(ALLOWED_STOCKS, db)
 
 ## account functions
 @app.put("/bot/", tags = ["account"])
