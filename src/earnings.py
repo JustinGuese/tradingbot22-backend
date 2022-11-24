@@ -116,7 +116,7 @@ def updateEarningEffect(STOCKS: list, db: Session):
                 continue
             start = quarter - timedelta(days=92)
             end = quarter + timedelta(days=15)
-            print(stock, start, end)
+            # print(stock, start, end)
             closedata = yf.download(stock, start = start, end = end, progress= False)
             
             quarter = __quarterKeyErrorFix(quarter, closedata)
@@ -158,7 +158,7 @@ def updateEarningEffect(STOCKS: list, db: Session):
         
         # delete nans out of the dict
         corrs = corrs.dropna()
-        if "signal" not in subset.columns:
+        if "signal" not in list(subset.columns):
             print("didnt get data for stock. will skeip: ", stock)
             continue
         corrs = corrs.drop(["signal"])
