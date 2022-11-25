@@ -81,7 +81,7 @@ async def __sell_stock(botname: str, ticker: str,
     if ticker not in ALLOWED_STOCKS:
         raise HTTPException(status_code=400, detail="Ticker not allowed")
     # get current price
-    currentPrice = yf.download(ticker, interval = "1d", period="1d", progress=False)["Close"].iloc[-1]
+    currentPrice = await __getCurrentPrice(ticker)
     # check if bot has enough stock
     if ticker not in bot.portfolio:
         raise HTTPException(status_code=404, detail="you do not own that stock to sell")

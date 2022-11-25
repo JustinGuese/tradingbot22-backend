@@ -8,6 +8,7 @@ COPY ./src/allowed_stocks.py /app/
 COPY ./src/buysell.py /app/
 COPY ./src/stoploss_takeprofit.py /app/
 COPY ./src/pricing_functions.py /app/
+COPY ./src/check_open_stoploss.py /app/
 COPY ./src/db.py /app/
 COPY ./src/elastic.py /app/
 COPY ./src/language.py /app/

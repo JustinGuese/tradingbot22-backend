@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from allowed_stocks import ALLOWED_STOCKS
 from buysell import __buy_stock, __sell_stock
+from check_open_stoploss import checkOpenStoplosses
 from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
                 TAType, TechnicalAnalysis, Trade, get_db)
 from earnings import updateEarningEffect, updateEarnings
@@ -272,6 +273,11 @@ async def sell_stock_stoploss(botname: str, ticker: str,
         amountInUSD: bool = False, short: bool = False, ):
     return await __sell_stock_stoploss(botname, ticker, db, close_if_below, close_if_above, maximum_date, amount, amountInUSD, short)
 
+# stoploss check
+@app.get("/stoplosscheck", tags = ["trades"])
+async def stoploss_check(db: Session = Depends(get_db)):
+    await checkOpenStoplosses(db)
+
 ## helper functions
 
 @app.get('/data/tradeable-tickers', tags = ["data"], response_model=List[str])
@@ -326,3 +332,4 @@ async def get_current_price(ticker: str, request: Request):
 @app.get("/healthz")
 async def healthcheck():
     return "yo whattup?"
+
