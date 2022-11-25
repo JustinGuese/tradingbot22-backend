@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: earnings-effect-update
+  namespace: tradingbot22
+spec:
+  schedule: "1 0 * */1 *" # once a month at 00:01
+  # schedule: "*/1 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: earnings-effect-update
+            image: buildpack-deps:curl
+            args:
+            - /bin/sh
+            - -ec
+            - curl http://tradingbot-baseimage-service:8000/update/earningeffects
+          restartPolicy: Never

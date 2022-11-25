@@ -4,6 +4,7 @@ WORKDIR /app
 COPY ./src/requirements.txt /app
 RUN pip install -r requirements.txt
 RUN python -c "import nltk; nltk.download('vader_lexicon'); nltk.download('punkt');"
+COPY ./src/allowed_stocks.py /app/
 COPY ./src/db.py /app/
 COPY ./src/elastic.py /app/
 COPY ./src/language.py /app/

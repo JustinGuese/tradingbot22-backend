@@ -11,10 +11,11 @@ from ta import add_all_ta_features
 from ta.utils import dropna
 from tqdm import tqdm
 
+from allowed_stocks import ALLOWED_STOCKS
 from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
                 TAType, TechnicalAnalysis, Trade, get_db)
 from earnings import updateEarningEffect, updateEarnings
-from elastic import logToElastic
+from elastic import logError, logToElastic
 from language import updateNews
 from yfrecommendations import getRecommendations
 
@@ -23,11 +24,7 @@ app = FastAPI()
 # CWEG.L = Amundi Index Solutions - Amundi MSCI World Energy UCITS ETF-C USD (CWEG.L)
 # IWDA.AS = iShares Core MSCI World UCITS ETF USD (Acc)
 # EEM = iShares MSCI Emerging Markets ETF (EEM)
-ALLOWED_STOCKS = [
-    "AAPL", "MSFT", "GOOG", "TSLA", 'AMD', 'AMZN', 'DG', 'KDP', 'LLY', 'NOC', 'NVDA', 'PGR', 'TEAM', 'UNH', 'WM',  # stocks
-    "URTH", "IWDA.AS", "EEM", # etfs
-    "BTC-USD", "ETH-USD", "AVAX-USD" # crypto
-]
+
 # interactive brokers 0.05% of Trade Value
 COMMISSION = 0.0005
 
@@ -61,6 +58,7 @@ async def __update(db: Session):
                     db.commit()
                 except Exception as e:
                     print("Stockdata SQL insert error with: " + ticker)
+                    logError("stockdata_update_sql_insert", ticker, str(repr(e)))
                     print(e)
         # next add technical indicators
         df = dropna(df)
@@ -90,21 +88,28 @@ async def __update(db: Session):
                 db.commit()
             except Exception as e:
                 print("TA SQL insert error with: " + ticker)
+                logError("ta_update_sql_insert", ticker, str(repr(e)))
                 print(e)
         # grab earnings updates
-        updateEarnings(ticker, db)
+        try:
+            updateEarnings(ticker, db)
+        except Exception as e:
+            logError("earnings_update", ticker, str(repr(e)))
+            print(e)
                 
         # next news sentiment update
         try:
             updateNews(ticker, db)
         except Exception as e:
             print("problem in news update: " + ticker)
+            logError("news_update", ticker, str(repr(e)))
             print(e)
         # next get recommendation update
         try:
             getRecommendations(ticker, db)
         except Exception as e:
             print("problem in recommendation update: " + ticker)
+            logError("analyst_update", ticker, str(repr(e)))
             print(e)
 
 @app.get("/update")
@@ -129,6 +134,7 @@ async def update_portfolioworth(db: Session = Depends(get_db)):
         
 @app.get("/update/earningeffects")
 async def update_earningeffects(db: Session = Depends(get_db)):
+    print("starting earning effect update. can take some time...")
     updateEarningEffect(ALLOWED_STOCKS, db)
 
 ## account functions
@@ -197,11 +203,13 @@ async def __portfolioWorth(botname: str, db: Session):
                     theBuyTrade = db.query(Trade).filter(Trade.bot == botname).filter(Trade.ticker == ticker).filter(Trade.buy == True).filter(Trade.short == True).order_by(Trade.id.desc()).first()
                     if theBuyTrade is None:
                         # no buy trade found, so we can't calculate the worth
+                        logError("portfolioworth", ticker, "No buy trade found for short position ", botname, " ", ticker)
                         raise ValueError("No buy trade found for short position ", botname, " ", ticker)
                     winSoFar = theBuyTrade.price - crntPrice
                     worth += (theBuyTrade.price + winSoFar) * abs(amount)
                 except Exception as e:
                     # TODO: log
+                    logError("portfolioworth", ticker,str(repr(e)))
                     print(e)
                     # at least assume it is a long
                     worth += await __getCurrentPrice(ticker) * abs(amount)

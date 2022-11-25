@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import yfinance as yf
 from sqlalchemy.orm import Session
+from tqdm import tqdm
 
 from db import EarningDates, QuarterlyFinancials, QuarterlyFinancialsEffect
 
@@ -12,6 +13,9 @@ def createTicker(ticker: str) -> yf.Ticker:
 
 def writeEarningsDates(tickerobj: yf.Ticker, ticker: str, db: Session):
     calendar = tickerobj.calendar
+    if len(calendar) == 0:
+        print("could not get earnings calendar for ticker", ticker)
+        return
     calendar = calendar.T
     calendar = calendar.set_index('Earnings Date')
     for dt, row in calendar.iterrows():
@@ -97,7 +101,7 @@ def __quarterKeyErrorFix(quarter, closedata):
 # this one is expected to be triggered monthly, updates the price effect of latest earnings
 def updateEarningEffect(STOCKS: list, db: Session):
     quarterlies = []
-    for stock in STOCKS:
+    for stock in tqdm(STOCKS):
         yobj = yf.Ticker(stock)
         quarterdata = yobj.quarterly_financials
         if len(quarterdata) == 0:
@@ -144,7 +148,7 @@ def updateEarningEffect(STOCKS: list, db: Session):
     # drop where all are none
     quarterlies = quarterlies.dropna(how="all", axis=1)
     quarterlies = quarterlies.fillna(0)
-    corrs = quarterlies.corr()
+    corrs = quarterlies.corr(numeric_only = True)
     corrs["signal"].sort_values(ascending=False)
     
     # grab the highest correlation value
@@ -161,7 +165,8 @@ def updateEarningEffect(STOCKS: list, db: Session):
         if "signal" not in list(subset.columns):
             print("didnt get data for stock. will skeip: ", stock)
             continue
-        corrs = corrs.drop(["signal"])
+        # somehow it happens that signal is still in there...
+        corrs = corrs.drop(["signal"], axis = 1)
         
         # get the usual drop or rise
         medchange = subset["win"].median()
