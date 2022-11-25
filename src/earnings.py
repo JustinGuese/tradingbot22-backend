@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from tqdm import tqdm
 
 from db import EarningDates, QuarterlyFinancials, QuarterlyFinancialsEffect
+from elastic import logError
 
 
 def createTicker(ticker: str) -> yf.Ticker:
@@ -155,35 +156,38 @@ def updateEarningEffect(STOCKS: list, db: Session):
     highest = dict()
 
     for stock in STOCKS:
-        subset = quarterlies[quarterlies["ticker"] == stock]
-        subset = subset.fillna(0)
-        corrs = subset.corr()
-        corrs = corrs["signal"].sort_values(ascending=False)
-        
-        # delete nans out of the dict
-        corrs = corrs.dropna()
-        if "signal" not in list(subset.columns):
-            print("didnt get data for stock. will skeip: ", stock)
-            continue
-        # somehow it happens that signal is still in there...
-        corrs = corrs.drop(["signal"], axis = 1)
-        
-        # get the usual drop or rise
-        medchange = subset["win"].median()
-        medvariance = subset["win"].std()
+        try:
+            subset = quarterlies[quarterlies["ticker"] == stock]
+            subset = subset.fillna(0)
+            corrs = subset.corr()
+            corrs = corrs["signal"].sort_values(ascending=False)
+            
+            # delete nans out of the dict
+            corrs = corrs.dropna()
+            if "signal" not in list(subset.columns):
+                print("didnt get data for stock. will skeip: ", stock)
+                continue
+            # somehow it happens that signal is still in there...
+            corrs = corrs.drop(["signal"])
+            
+            # get the usual drop or rise
+            medchange = subset["win"].median()
+            medvariance = subset["win"].std()
 
-        best = {
-            corrs.index[0]: round(corrs.iloc[0],2),
-            corrs.index[1]: round(corrs.iloc[1],2),
-            corrs.index[-2] : round(corrs.iloc[-2],2),
-            corrs.index[-1] : round(corrs.iloc[-1],2)
-        }
-        highest[stock] = {
-            "medchange" : round(medchange, 2),
-            "medvariance" : round(medvariance, 2),
-            "all_changes" : subset["win"].to_list(),
-            "best" : best
-        }
+            best = {
+                corrs.index[0]: round(corrs.iloc[0],2),
+                corrs.index[1]: round(corrs.iloc[1],2),
+                corrs.index[-2] : round(corrs.iloc[-2],2),
+                corrs.index[-1] : round(corrs.iloc[-1],2)
+            }
+            highest[stock] = {
+                "medchange" : round(medchange, 2),
+                "medvariance" : round(medvariance, 2),
+                "all_changes" : subset["win"].to_list(),
+                "best" : best
+            }
+        except Exception as e:
+            logError("update_earning_effect", stock, str(repr(e)))
         
     # with open("earnings_results.json", "w") as f:
     #     json.dump(highest, f, indent=4)
