@@ -72,7 +72,7 @@ class Trade(Base):
     buy = Column(Boolean)
     short = Column(Boolean)
     price = Column(Float)
-    quantity = Column(Integer)
+    quantity = Column(Float)
 
 # ta
 # all ta columns
@@ -372,7 +372,18 @@ class QuarterlyFinancialsEffect(Base):
     all_changes_list = Column(String)
     best = Column(MutableDict.as_mutable(JSON))
 
-
+## stop loss take profit object
+class StopLoss(Base):
+    __tablename__ = "open_stoplosses"
+    bot = Column(String, ForeignKey("bots.name", ondelete="CASCADE"))
+    ticker = Column(String, primary_key=True, index=True)
+    timestamp = Column(DateTime, primary_key=True, index=True, default = datetime.utcnow)
+    buy = Column(Boolean)
+    short = Column(Boolean)
+    # stop loss specific
+    close_if_below = Column(Float)
+    close_if_above = Column(Float)
+    maximum_date = Column(DateTime, nullable = True) # close it if this date is reached
 
 
 ## pydantic #########
