@@ -240,13 +240,21 @@ async def delete_bot(botname: str, request: Request, db: Session = Depends(get_d
 async def buy_stock(botname: str, ticker: str, 
         db: Session = Depends(get_db), amount: float = -1,
         amountInUSD: bool = False, short: bool = False):
-    return await __buy_stock(botname, ticker, db, amount, amountInUSD, short)
+    try:
+        return await __buy_stock(botname, ticker, db, amount, amountInUSD, short)
+    except Exception as e:
+        logError("buy", ticker, str(repr(e)), severity = "critical")
+        raise
 
 @app.put("/sell/", tags = ["trades"])
 async def sell_stock(botname: str, ticker: str, 
         db: Session = Depends(get_db), amount: float = -1,
         amountInUSD: bool = False, short: bool = False):
-    return await __sell_stock(botname, ticker, db, amount, amountInUSD, short)
+    try:
+        return await __sell_stock(botname, ticker, db, amount, amountInUSD, short)
+    except Exception as e:
+        logError("sell", ticker, str(repr(e)), severity = "critical")
+        raise
 
 @app.put("/buy/stoploss", tags = ["trades"])
 async def buy_stock_stoploss(botname: str, ticker: str, 
