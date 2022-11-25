@@ -378,8 +378,7 @@ class StopLoss(Base):
     bot = Column(String, ForeignKey("bots.name", ondelete="CASCADE"))
     ticker = Column(String, primary_key=True, index=True)
     timestamp = Column(DateTime, primary_key=True, index=True, default = datetime.utcnow)
-    buy = Column(Boolean)
-    short = Column(Boolean)
+    trade_id = Column(Integer, ForeignKey("trades.id", ondelete="CASCADE"))
     # stop loss specific
     close_if_below = Column(Float)
     close_if_above = Column(Float)

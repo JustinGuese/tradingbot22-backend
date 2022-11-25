@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import yfinance as yf
@@ -69,7 +70,7 @@ async def __buy_stock(botname: str, ticker: str,
             "price": currentPrice,
             "quantity": amount
             })
-    return bot.portfolio
+    return trade.id
 
 async def __sell_stock(botname: str, ticker: str, 
         db: Session, amount: float = -1,
@@ -136,5 +137,5 @@ async def __sell_stock(botname: str, ticker: str,
             "price": currentPrice,
             "quantity": amount
             })
-    return bot.portfolio
+    return trade.id
 

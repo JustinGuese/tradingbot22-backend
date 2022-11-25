@@ -10,6 +10,7 @@ from db import StopLoss
 async def __writeStoplossToDB(botname: str, ticker: str, db: Session, buy: bool,
         # stop loss specific
         close_if_below: float, close_if_above: float,
+        trade_id: int,
         maximum_date: datetime = None,
         amount: float = -1,
         amountInUSD: bool = False, short: bool = False,
@@ -18,14 +19,14 @@ async def __writeStoplossToDB(botname: str, ticker: str, db: Session, buy: bool,
     stoploss = StopLoss(
             bot = botname,
             ticker = ticker,
-            buy = buy,
-            short = short,
+            trade_id = trade_id,
             close_if_below = close_if_below,
             close_if_above = close_if_above,
             maximum_date = maximum_date,
             )
     db.add(stoploss)
     db.commit()
+    return stoploss
 
 async def __buy_stock_stoploss(botname: str, ticker: str, db: Session, 
         # stop loss specific
@@ -35,9 +36,9 @@ async def __buy_stock_stoploss(botname: str, ticker: str, db: Session,
         amountInUSD: bool = False, short: bool = False,
         ):
     # execute buy as usual
-    await __buy_stock(botname, ticker, db, amount, amountInUSD, short)
+    tradeid = await __buy_stock(botname, ticker, db, amount, amountInUSD, short)
     # then open stop loss to db
-    await __writeStoplossToDB(botname, ticker, db, True, close_if_below, close_if_above, maximum_date, amount, amountInUSD, short)
+    stoplossobj = await __writeStoplossToDB(botname, ticker, db, True, close_if_below, close_if_above, tradeid, maximum_date, amount, amountInUSD, short)
     
 async def __sell_stock_stoploss(botname: str, ticker: str, db: Session, 
         # stop loss specific
@@ -46,6 +47,6 @@ async def __sell_stock_stoploss(botname: str, ticker: str, db: Session,
         amount: float = -1,
         amountInUSD: bool = False, short: bool = False,
         ):
-    await __sell_stock(botname, ticker, db, amount, amountInUSD, short)
+    tradeid = await __sell_stock(botname, ticker, db, amount, amountInUSD, short)
     # then proceed to write it to DB 
-    await __writeStoplossToDB(botname, ticker, db, False, close_if_below, close_if_above, maximum_date, amount, amountInUSD, short)
+    stoplossobj = await __writeStoplossToDB(botname, ticker, db, False, close_if_below, close_if_above, tradeid, maximum_date, amount, amountInUSD, short)
