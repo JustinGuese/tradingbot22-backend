@@ -1,5 +1,5 @@
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 import numpy as np
@@ -14,8 +14,9 @@ from tqdm import tqdm
 from allowed_stocks import ALLOWED_STOCKS
 from buysell import __buy_stock, __sell_stock
 from check_open_stoploss import checkOpenStoplosses
-from db import (TA_COLUMNS, Bot, BotPD, GetTradeDataPD, NewBotPD, StockData,
-                TAType, TechnicalAnalysis, Trade, get_db)
+from db import (TA_COLUMNS, Bot, BotPD, EarningDates, EarningDatesPD,
+                GetTradeDataPD, NewBotPD, StockData, TAType, TechnicalAnalysis,
+                Trade, get_db)
 from earnings import updateEarningEffect, updateEarnings
 from elastic import logError, logToElastic
 from language import updateNews
@@ -332,4 +333,18 @@ async def get_current_price(ticker: str, request: Request):
 @app.get("/healthz")
 async def healthcheck():
     return "yo whattup?"
+
+## earning calendar routes
+@app.get("/data/earnings-calendar", tags = ["data"], response_model = List[EarningDatesPD])
+async def getEarningsCalendar(now: bool = True, db: Session = Depends(get_db)):
+    FROM = datetime.now() - timedelta(days=1)
+    TO = datetime.now() + timedelta(days=1)
+    if now:
+        allEarnings = db.query(EarningDates).filter(FROM <= EarningDates.timestamp).filter(EarningDates.timestamp <= TO).all()
+    else:
+        allEarnings = db.query(EarningDates).order_by(EarningDates.timestamp).all()
+    if len(allEarnings) == 0:
+        return []
+    else:
+        return allEarnings
 
