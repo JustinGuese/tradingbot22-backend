@@ -15,7 +15,9 @@ from allowed_stocks import ALLOWED_STOCKS
 from buysell import __buy_stock, __sell_stock
 from check_open_stoploss import checkOpenStoplosses
 from db import (TA_COLUMNS, Bot, BotPD, EarningDates, EarningDatesPD,
-                GetTradeDataPD, NewBotPD, StockData, TAType, TechnicalAnalysis,
+                GetTradeDataPD, NewBotPD, QuarterlyFinancials,
+                QuarterlyFinancialsEffect, QuarterlyFinancialsEffectPD,
+                QuarterlyFinancialsPD, StockData, TAType, TechnicalAnalysis,
                 Trade, get_db)
 from earnings import updateEarningEffect, updateEarnings
 from elastic import logError, logToElastic
@@ -335,7 +337,7 @@ async def healthcheck():
     return "yo whattup?"
 
 ## earning calendar routes
-@app.get("/data/earnings-calendar", tags = ["data"], response_model = List[EarningDatesPD])
+@app.get("/data/earnings/calendar", tags = ["data", "earnings"], response_model = List[EarningDatesPD])
 async def getEarningsCalendar(now: bool = True, db: Session = Depends(get_db)):
     FROM = datetime.now() - timedelta(days=1)
     TO = datetime.now() + timedelta(days=1)
@@ -347,4 +349,22 @@ async def getEarningsCalendar(now: bool = True, db: Session = Depends(get_db)):
         return []
     else:
         return allEarnings
+    
+@app.get("/data/earnings/financials", tags = ["data", "earnings"], response_model = List[QuarterlyFinancialsPD])
+async def getEarningsFinancials(ticker: str, now: bool = True, db: Session = Depends(get_db)):
+    if now:
+        allFinancials = db.query(QuarterlyFinancials).filter(QuarterlyFinancials.ticker == ticker).order_by(QuarterlyFinancials.timestamp.desc()).first()
+        if allFinancials is not None:
+            allFinancials = [allFinancials]
+        else:
+            allFinancials = []
+    else:
+        allFinancials = db.query(QuarterlyFinancials).filter(QuarterlyFinancials.ticker == ticker).order_by(QuarterlyFinancials.timestamp.desc()).all()
+    return allFinancials
 
+@app.get("/data/earnings/effect", tags = ["data", "earnings"], response_model = QuarterlyFinancialsEffectPD)
+async def getEarningsEffect(ticker: str, db: Session = Depends(get_db)):
+    effect = db.query(QuarterlyFinancialsEffect).filter(QuarterlyFinancialsEffect.ticker == ticker).first()
+    if effect is None:
+        raise HTTPException(404, "ticker not found in quarterly financials effect table")
+    return effect

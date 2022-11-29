@@ -392,6 +392,8 @@ StockDataPD = sqlalchemy_to_pydantic(StockData)
 TradePD = sqlalchemy_to_pydantic(Trade)
 TechnicalAnalysisPD = sqlalchemy_to_pydantic(TechnicalAnalysis)
 EarningDatesPD = sqlalchemy_to_pydantic(EarningDates)
+QuarterlyFinancialsPD = sqlalchemy_to_pydantic(QuarterlyFinancials)
+QuarterlyFinancialsEffectPD = sqlalchemy_to_pydantic(QuarterlyFinancialsEffect)
 
 # custom pydantic
 class NewBotPD(BaseModel):
