@@ -33,7 +33,6 @@ app = FastAPI(title="Tradingbot22 API", description="API for the tradingbot22 pr
 # EEM = iShares MSCI Emerging Markets ETF (EEM)
 
 
-
 async def __update(db: Session):
     print("updating data now")
     for ticker in tqdm(ALLOWED_STOCKS):
@@ -98,7 +97,7 @@ async def __update(db: Session):
                 print(e)
         # grab earnings updates
         try:
-            updateEarnings(ticker, db)
+            updateEarningsRoot(ticker, db)
         except Exception as e:
             logError("earnings_update", ticker, str(repr(e)))
             print(e)
@@ -121,6 +120,10 @@ async def __update(db: Session):
 @app.get("/update")
 async def update(db: Session = Depends(get_db)):
     await __update(db)
+    
+@app.get("/update/earnings/")
+async def updateEarningsRoot(ticker: str, db: Session = Depends(get_db)):
+    updateEarnings(ticker, db)
     
 @app.get("/update/portfolioworth")
 async def update_portfolioworth(db: Session = Depends(get_db)):
