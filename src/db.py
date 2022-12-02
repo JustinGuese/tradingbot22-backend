@@ -22,7 +22,8 @@ engine = create_engine(DATABASE_URL,
         "keepalives_idle": 30,
         "keepalives_interval": 10,
         "keepalives_count": 5,
-    }
+    },
+    echo=True # debugging
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

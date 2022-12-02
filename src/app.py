@@ -1,12 +1,12 @@
 import warnings
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
 from fastapi import Depends, FastAPI, HTTPException, Request
-from sqlalchemy import extract
+from sqlalchemy import and_, extract, or_
 from sqlalchemy.orm import Session
 from ta import add_all_ta_features
 from ta.utils import dropna
@@ -355,13 +355,16 @@ async def getEarningsCalendar(now: bool = True, db: Session = Depends(get_db)):
         return allEarnings
     
 @app.get("/data/earnings/calendar-previous", tags = ["data", "earnings"])
-async def getEarningsCalendarPrevious(buffer_around_today: int = 1, db: Session = Depends(get_db)):
-    FROM = datetime.now() - timedelta(days=buffer_around_today)
-    TO = datetime.now() + timedelta(days=buffer_around_today)
+async def getEarningsCalendarPrevious(custom_date: date = date.today(), db: Session = Depends(get_db)):
     # cool sqlalchemy usage btw with extract
-    previousEarnings = db.query(QuarterlyFinancials).filter(extract('day', QuarterlyFinancials.timestamp) >= FROM.day).filter(extract('day', QuarterlyFinancials.timestamp) <= TO.day) \
-            .filter(extract('month', QuarterlyFinancials.timestamp) < FROM.month).filter(extract('month', QuarterlyFinancials.timestamp) >= TO.month) \
-            .order_by(QuarterlyFinancials.timestamp.desc()).all()
+    TODAY = custom_date
+    previousEarnings = db.query(QuarterlyFinancials.ticker, QuarterlyFinancials.timestamp).filter(
+        or_(
+            QuarterlyFinancials.timestamp == TODAY,
+            QuarterlyFinancials.timestamp == TODAY - timedelta(days=365),
+            QuarterlyFinancials.timestamp == TODAY - timedelta(days=365*2),
+        )
+    ).order_by(QuarterlyFinancials.timestamp.desc()).all()
     return previousEarnings
     
 @app.get("/data/earnings/financials", tags = ["data", "earnings"], response_model = List[QuarterlyFinancialsPD])
