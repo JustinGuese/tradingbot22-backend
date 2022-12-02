@@ -272,13 +272,13 @@ async def buy_stock_stoploss(botname: str, ticker: str,
         amountInUSD: bool = False, short: bool = False, ):
     return await __buy_stock_stoploss(botname, ticker, db, close_if_below, close_if_above, maximum_date, amount, amountInUSD, short)
 
-@app.put("/sell/stoploss", tags = ["trades"])
-async def sell_stock_stoploss(botname: str, ticker: str, 
-        close_if_below: float, close_if_above: float,
-        maximum_date: datetime = None,
-        db: Session = Depends(get_db), amount: float = -1,
-        amountInUSD: bool = False, short: bool = False, ):
-    return await __sell_stock_stoploss(botname, ticker, db, close_if_below, close_if_above, maximum_date, amount, amountInUSD, short)
+# @app.put("/sell/stoploss", tags = ["trades"])
+# async def sell_stock_stoploss(botname: str, ticker: str, 
+#         close_if_below: float, close_if_above: float,
+#         maximum_date: datetime = None,
+#         db: Session = Depends(get_db), amount: float = -1,
+#         amountInUSD: bool = False, short: bool = False, ):
+#     return await __sell_stock_stoploss(botname, ticker, db, close_if_below, close_if_above, maximum_date, amount, amountInUSD, short)
 
 # stoploss check
 @app.get("/stoplosscheck", tags = ["trades"])

@@ -168,8 +168,10 @@ def updateEarningEffect(STOCKS: list, db: Session):
                 print("didnt get data for stock. will skeip: ", stock)
                 continue
             # somehow it happens that signal is still in there...
-            corrs = corrs.drop(["signal"])
-            
+            try:
+                corrs = corrs.drop(["signal"])
+            except:
+                pass
             # get the usual drop or rise
             medchange = subset["win"].median()
             medvariance = subset["win"].std()
