@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from fastapi import Depends, FastAPI, HTTPException, Request
+from sqlalchemy import extract
 from sqlalchemy.orm import Session
 from ta import add_all_ta_features
 from ta.utils import dropna
@@ -352,6 +353,16 @@ async def getEarningsCalendar(now: bool = True, db: Session = Depends(get_db)):
         return []
     else:
         return allEarnings
+    
+@app.get("/data/earnings/calendar-previous", tags = ["data", "earnings"])
+async def getEarningsCalendarPrevious(buffer_around_today: int = 1, db: Session = Depends(get_db)):
+    FROM = datetime.now() - timedelta(days=buffer_around_today)
+    TO = datetime.now() + timedelta(days=buffer_around_today)
+    # cool sqlalchemy usage btw with extract
+    previousEarnings = db.query(QuarterlyFinancials).filter(extract('day', QuarterlyFinancials.timestamp) >= FROM.day).filter(extract('day', QuarterlyFinancials.timestamp) <= TO.day) \
+            .filter(extract('month', QuarterlyFinancials.timestamp) < FROM.month).filter(extract('month', QuarterlyFinancials.timestamp) >= TO.month) \
+            .order_by(QuarterlyFinancials.timestamp.desc()).all()
+    return previousEarnings
     
 @app.get("/data/earnings/financials", tags = ["data", "earnings"], response_model = List[QuarterlyFinancialsPD])
 async def getEarningsFinancials(ticker: str, now: bool = True, db: Session = Depends(get_db)):
