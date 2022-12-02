@@ -4,7 +4,7 @@ metadata:
   name: earnings-effect-update
   namespace: tradingbot22
 spec:
-  schedule: "1 0 * */1 *" # once a month at 00:01
+  schedule: "1 0 1 * *" # once a month at 00:01
   # schedule: "*/1 * * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
