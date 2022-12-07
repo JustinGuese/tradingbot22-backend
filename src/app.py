@@ -413,5 +413,6 @@ async def getEarningsRatings(ticker: str, db: Session = Depends(get_db)):
     if results is None:
         raise HTTPException(404, "ticker data not found in earnings ratings table")
     # convert to pydantic
+    results.similar_stocks =results.similar_stocks.split(",")
     earnRatObj = EarningRatingsPD(**results.__dict__)
     return earnRatObj

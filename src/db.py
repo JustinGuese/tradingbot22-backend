@@ -407,7 +407,7 @@ TechnicalAnalysisPD = sqlalchemy_to_pydantic(TechnicalAnalysis)
 EarningDatesPD = sqlalchemy_to_pydantic(EarningDates)
 QuarterlyFinancialsPD = sqlalchemy_to_pydantic(QuarterlyFinancials)
 QuarterlyFinancialsEffectPD = sqlalchemy_to_pydantic(QuarterlyFinancialsEffect)
-EarningRatingsPD = sqlalchemy_to_pydantic(EarningRatings)
+# EarningRatingsPD = sqlalchemy_to_pydantic(EarningRatings)
 
 # custom pydantic
 class NewBotPD(BaseModel):
@@ -419,5 +419,16 @@ class GetTradeDataPD(BaseModel):
     start_date: date = (datetime.utcnow() - timedelta(7)).date()
     end_date: date = datetime.utcnow().date()
     technical_analysis_columns: List[TAType] = []
+    
+class EarningRatingsPD(BaseModel):
+    ticker: str
+    timestamp: datetime
+    similar_stocks: List[str] # array in truth
+    analyst_rating: float
+    pricetarget_low: float
+    pricetarget_average: float
+    pricetarget_high: float
+    pricetarget_current: float
+    current_performance: int
 
 Base.metadata.create_all(engine)
