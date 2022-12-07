@@ -16,15 +16,16 @@ from allowed_stocks import ALLOWED_STOCKS
 from buysell import __buy_stock, __sell_stock
 from check_open_stoploss import checkOpenStoplosses
 from db import (TA_COLUMNS, Bot, BotPD, EarningDates, EarningDatesPD,
-                GetTradeDataPD, NewBotPD, QuarterlyFinancials,
-                QuarterlyFinancialsEffect, QuarterlyFinancialsEffectPD,
-                QuarterlyFinancialsPD, StockData, TAType, TechnicalAnalysis,
-                Trade, get_db)
+                EarningRatings, EarningRatingsPD, GetTradeDataPD, NewBotPD,
+                QuarterlyFinancials, QuarterlyFinancialsEffect,
+                QuarterlyFinancialsEffectPD, QuarterlyFinancialsPD, StockData,
+                TAType, TechnicalAnalysis, Trade, get_db)
 from earnings import updateEarningEffect, updateEarnings
 from elastic import logError, logToElastic
 from language import updateNews
 from pricing_functions import __getCurrentPrice
 from stoploss_takeprofit import __buy_stock_stoploss, __sell_stock_stoploss
+from yahoo_extras import updateYahooEarningsRatingsData
 from yfrecommendations import getRecommendations
 
 app = FastAPI(title="Tradingbot22 API", description="API for the tradingbot22 project", version="0.1")
@@ -117,6 +118,8 @@ async def __update(db: Session):
             print("problem in recommendation update: " + ticker)
             logError("analyst_update", ticker, str(repr(e)))
             print(e)
+    # trigger the last update of earning ratings by analyst (custom yahoo data)
+    await updateYahooEarningsRatingsData(ALLOWED_STOCKS, db)
 
 @app.get("/update")
 async def update(db: Session = Depends(get_db)):
@@ -125,6 +128,11 @@ async def update(db: Session = Depends(get_db)):
 @app.get("/update/earnings/")
 async def updateEarningsRoot(ticker: str, db: Session = Depends(get_db)):
     updateEarnings(ticker, db)
+    
+@app.get("/update/earnings/ratings/")
+async def updateEarningsRatings(db: Session = Depends(get_db)):
+    await updateYahooEarningsRatingsData(ALLOWED_STOCKS, db)
+
     
 @app.get("/update/portfolioworth")
 async def update_portfolioworth(db: Session = Depends(get_db)):
@@ -385,3 +393,25 @@ async def getEarningsEffect(ticker: str, db: Session = Depends(get_db)):
     if effect is None:
         raise HTTPException(404, "ticker not found in quarterly financials effect table")
     return effect
+
+## yahoo extra data
+@app.get("/data/earnings/ratings", tags = ["data", "earnings"], response_model = EarningRatingsPD)
+async def getEarningsRatings(ticker: str, db: Session = Depends(get_db)):
+    # ticker = Column(String, primary_key=True, index=True)
+    # timestamp = Column(DateTime, primary_key=True, index=True)
+    # analyst_rating = Column(Float)
+    # pricetarget_low = Column(Float)
+    # pricetarget_average = Column(Float)
+    # pricetarget_high = Column(Float)
+    # pricetarget_current = Column(Float)
+    # current_performance = Column(Integer) #
+    if ticker not in ALLOWED_STOCKS:
+        raise HTTPException(status_code=400, detail="Ticker not allowed")
+    
+    # try to get them from db
+    results = db.query(EarningRatings).filter(EarningRatings.ticker == ticker).order_by(EarningRatings.timestamp.desc()).first()
+    if results is None:
+        raise HTTPException(404, "ticker data not found in earnings ratings table")
+    # convert to pydantic
+    earnRatObj = EarningRatingsPD(**results.__dict__)
+    return earnRatObj

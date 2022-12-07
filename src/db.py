@@ -1,12 +1,13 @@
+import enum
 from datetime import date, datetime, timedelta
-from enum import Enum
 from os import environ
 from typing import List, Optional
 
 from pydantic import BaseModel
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
 from sqlalchemy import (JSON, BigInteger, Boolean, Column, Date, DateTime,
-                        Float, ForeignKey, Integer, String, create_engine)
+                        Enum, Float, ForeignKey, Integer, String,
+                        create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship, sessionmaker
@@ -23,7 +24,7 @@ engine = create_engine(DATABASE_URL,
         "keepalives_interval": 10,
         "keepalives_count": 5,
     },
-    echo=True # debugging
+    # echo=True # debugging
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -105,7 +106,7 @@ TA_COLUMNS = [
     'others_cr'
 ]
 
-class TAType(str, Enum):
+class TAType(str, enum.Enum):
     volume_adi = "volume_adi"
     volume_obv = "volume_obv"
     volume_cmf = "volume_cmf"
@@ -383,8 +384,19 @@ class StopLoss(Base):
     # stop loss specific
     close_if_below = Column(Float)
     close_if_above = Column(Float)
-    maximum_date = Column(DateTime, nullable = True) # close it if this date is reached
+    maximum_date = Column(DateTime, nullable = True) # close it if this date is reached"
 
+class EarningRatings(Base):
+    __tablename__ = "earning_ratings"
+    ticker = Column(String, primary_key=True, index=True)
+    timestamp = Column(DateTime, primary_key=True, index=True)
+    similar_stocks = Column(String) # array in truth
+    analyst_rating = Column(Float)
+    pricetarget_low = Column(Float)
+    pricetarget_average = Column(Float)
+    pricetarget_high = Column(Float)
+    pricetarget_current = Column(Float)
+    current_performance = Column(Integer) #-2 very much below, -1., 0 as expected, 1 better, 2 outperform 
 
 ## pydantic #########
 
@@ -395,6 +407,7 @@ TechnicalAnalysisPD = sqlalchemy_to_pydantic(TechnicalAnalysis)
 EarningDatesPD = sqlalchemy_to_pydantic(EarningDates)
 QuarterlyFinancialsPD = sqlalchemy_to_pydantic(QuarterlyFinancials)
 QuarterlyFinancialsEffectPD = sqlalchemy_to_pydantic(QuarterlyFinancialsEffect)
+EarningRatingsPD = sqlalchemy_to_pydantic(EarningRatings)
 
 # custom pydantic
 class NewBotPD(BaseModel):
