@@ -416,3 +416,21 @@ async def getEarningsRatings(ticker: str, db: Session = Depends(get_db)):
     results.similar_stocks =results.similar_stocks.split(",")
     earnRatObj = EarningRatingsPD(**results.__dict__)
     return earnRatObj
+
+@app.get("/data/earnings/ratings/all", tags = ["data", "earnings"], response_model = List[EarningRatingsPD])
+async def getAllEarningsRatings(db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    yesterday = now - timedelta(days=1.5)
+    results = db.query(EarningRatings).filter(EarningRatings.timestamp <= now).filter(EarningRatings.timestamp >= yesterday).all()
+    if len(results) == 0 or results is None:
+        logError("getAllEarningsRatings", "all", "cant get any  data for earnings ratings...")
+        raise HTTPException(500, "cant get any  data for earnings ratings...")
+    response = []
+    alreadyHave = []
+    for res in results:
+        if res.ticker not in alreadyHave:
+            res.similar_stocks =res.similar_stocks.split(",")
+            earnRatObj = EarningRatingsPD(**res.__dict__)
+            response.append(earnRatObj)
+            alreadyHave.append(res.ticker)
+    return response
