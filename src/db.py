@@ -382,6 +382,7 @@ class StopLoss(Base):
     timestamp = Column(DateTime, primary_key=True, index=True, default = datetime.utcnow)
     trade_id = Column(Integer, ForeignKey("trades.id", ondelete="CASCADE"))
     # stop loss specific
+    close_if_below_hardlimit = Column(Float, nullable=True)
     close_if_below = Column(Float)
     close_if_above = Column(Float)
     maximum_date = Column(DateTime, nullable = True) # close it if this date is reached"

@@ -43,15 +43,46 @@ async def checkOpenStoplosses(db: Session):
                 # next grab the current mf price
                 crntPrice = await __getCurrentPrice(trade.ticker)
                 if not trade.short:
+                    if stoploss.close_if_above < stoploss.close_if_below:
+                        raise HTTPException(status_code=500, detail="close_if_above is lower than close_if_below for a long position. cant be")
                     # was a long order
-                    if crntPrice < stoploss.close_if_below:
-                        print("stop loss")
-                        await __closeTrade(trade, db)
-                    elif crntPrice > stoploss.close_if_above:
-                        print("take profit ")
-                        await __closeTrade(trade, db)
+                    if stoploss.close_if_below_hardlimit is not None:
+                        if stoploss.close_if_below_hardlimit > stoploss.close_if_below:
+                            raise HTTPException(status_code=500, detail="close_if_below_hardlimit is higher than close_if_below for a long position. cant be")
+                        # we want to use this as a hard limit. so if below that one directly sell,
+                        # otherwise if it is none, we want to treat close_if_below as this.
+                        # otherwise if it is set, and we are abive it and between close_if_below do nothing,
+                        # otherwise if we are below close_if_below and and we are above close_if_below, set close_if_below to close_if_below_hardlimit
+                        # like a trailing stoploss
+                        if crntPrice < stoploss.close_if_below_hardlimit:
+                            print("hard stop loss")
+                            await __closeTrade(trade, db)
+                        elif crntPrice < stoploss.close_if_below:
+                            # if we are inbetween close_if_below_hardlimit and close_if_below, do nothing
+                            pass
+                        elif crntPrice > stoploss.close_if_below and crntPrice < stoploss.close_if_above:
+                            # adapt the stoploss trailing stoploss
+                            stoploss.close_if_below_hardlimit = stoploss.close_if_below 
+                            stoploss.close_if_below = crntPrice * 1.05
+                            # write changes to db
+                            db.add(stoploss)
+                            db.commit()
+                        elif crntPrice > stoploss.close_if_above:
+                            print("take profit ")
+                            await __closeTrade(trade, db)
+                    else:
+                        # there was no specific hard limit set, so treating close_if_below as hard limit
+                        if crntPrice < stoploss.close_if_below:
+                            print("stop loss")
+                            await __closeTrade(trade, db)
+                        elif crntPrice > stoploss.close_if_above:
+                            print("take profit ")
+                            await __closeTrade(trade, db)
                 else:
                     # was a short
+                    if stoploss.close_if_above > stoploss.close_if_below:
+                        raise HTTPException(status_code=500, detail="close_if_above is lower than close_if_below for a short position. cant be")
+                    # TODO: not really implemented yet
                     if crntPrice > stoploss.close_if_above:
                         print("stop loss")
                         await __closeTrade(trade, db)
