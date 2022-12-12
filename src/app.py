@@ -99,7 +99,7 @@ async def __update(db: Session):
                 print(e)
         # grab earnings updates
         try:
-            updateEarningsRoot(ticker, db)
+            updateEarnings(ticker, db)
         except Exception as e:
             logError("earnings_update", ticker, str(repr(e)))
             print(e)
