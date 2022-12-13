@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "postgres-backup"
+  namespace: tradingbot22
+spec:
+  schedule: "1 2 * * 1" # help: https://crontab.guru/#30_15-21_*_*_*
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: guestros/postgres-s3-backup:latest
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: PSQL_HOST
+              value: "postgres-service"
+            - name: PSQL_PORT
+              value: "5432"
+            - name: S3_BUCKET
+              value: "tradingbot22-manual-backup"
+            - name: S3_PATH
+              value: ""
+            - name: S3_REGION
+              value: "eu-central-2"
+            - name: S3_ENDPOINT
+              value: "https://s3.eu-central-2.wasabisys.com"
+            ## secrets
+            # psql
+            - name: PSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: s3backuptarget
+                  key: PSQL_USER
+            - name: PSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: s3backuptarget
+                  key: PSQL_PASSWORD
+            # AWS
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: s3backuptarget
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3backuptarget
+                  key: AWS_SECRET_ACCESS_KEY
+          restartPolicy: OnFailure

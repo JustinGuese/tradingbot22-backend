@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 auth
+s3backup
 
 # C extensions
 *.so
