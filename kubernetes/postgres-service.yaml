@@ -13,19 +13,19 @@ spec:
   selector:
     service: postgres
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    service: postgres
-  name: postgres-service-nodeport
-  namespace: tradingbot22
-spec:
-  type: NodePort
-  ports:
-    - name: "5432"
-      port: 5432
-      targetPort: 5432
-      nodePort: 31432
-  selector:
-    service: postgres
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     service: postgres
+#   name: postgres-service-nodeport
+#   namespace: tradingbot22
+# spec:
+#   type: NodePort
+#   ports:
+#     - name: "5432"
+#       port: 5432
+#       targetPort: 5432
+#       nodePort: 31432
+#   selector:
+#     service: postgres
