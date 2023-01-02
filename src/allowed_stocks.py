@@ -15,5 +15,6 @@ ALLOWED_STOCKS = [
     # crypto
     "BTC-USD", "ETH-USD", "AVAX-USD", # crypto
     # leveraged etfs and stuff from compose trade
-    "GLD", "TMF", "FAS", "TQQQ", "QQQ", "UUP"
+    "GLD", "TMF", "FAS", "TQQQ", "QQQ", "UUP", # boring
+    "META", "PYPL", "ADBE", # big tech momentum
 ]
