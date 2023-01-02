@@ -12,5 +12,20 @@ spec:
       targetPort: 8000
   selector:
     io.kompose.service: tradingbot-baseimage
-status:
-  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: tradingbot-baseimage
+  name: tradingbot-service-nodeport
+  namespace: tradingbot22
+spec:
+  type: NodePort
+  ports:
+    - name: "8000"
+      port: 8000
+      targetPort: 8000
+      nodePort: 31000
+  selector:
+    io.kompose.service: tradingbot-baseimage

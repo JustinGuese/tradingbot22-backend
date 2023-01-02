@@ -13,5 +13,7 @@ ALLOWED_STOCKS = [
     "RENW.DE", # L&G Clean Energy UCITS ETF (RENW.DE)
     "BNXG.DE", # Invesco CoinShares Global Blockchain UCITS ETF (BNXG.DE)
     # crypto
-    "BTC-USD", "ETH-USD", "AVAX-USD" # crypto
+    "BTC-USD", "ETH-USD", "AVAX-USD", # crypto
+    # leveraged etfs and stuff from compose trade
+    "GLD", "TMF", "FAS", "TQQQ", "UUP"
 ]

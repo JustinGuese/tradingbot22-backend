@@ -12,7 +12,7 @@ spec:
           containers:
           - name: hello
             image: guestros/postgres-s3-backup:latest
-            imagePullPolicy: IfNotPresent
+            imagePullPolicy: Always
             env:
             - name: PSQL_HOST
               value: "postgres-service"
