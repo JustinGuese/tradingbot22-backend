@@ -17,5 +17,6 @@ ALLOWED_STOCKS = [
     # leveraged etfs and stuff from compose trade
     "GLD", "TMF", "FAS", "TQQQ", "QQQ", "UUP", # boring
     "META", "PYPL", "ADBE", # big tech momentum
-    "UPRO", # hedgefundie
+    "UPRO", # hedgefundie,
+    "BSV", "SQQQ", # buy the dippies
 ]
