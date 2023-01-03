@@ -38,86 +38,90 @@ app = FastAPI(title="Tradingbot22 API", description="API for the tradingbot22 pr
 async def __update(db: Session):
     print("updating data now")
     for ticker in tqdm(ALLOWED_STOCKS):
-        # first check if it's already in database
-        if db.query(StockData).filter(StockData.ticker == ticker).first() is None:
-            lookback = "5y"
-        else:
-            lookback = "201d"
-        # if not, add complete history
-        df = yf.download(ticker, interval = "1d", period=lookback, progress=False)
-        # stockdataobjects = []
-        if len(df) == 0:
-            raise ValueError("No data for ticker " + ticker)
-        for i in range(len(df)):
-            if df.iloc[i].Volume > 0: # it is 0 if the day is not yet complete
-                stockobj = StockData(
-                        timestamp = pd.to_datetime(df.index[i]),
-                        ticker = ticker,
-                        open = float(df.iloc[i].Open),
-                        high = float(df.iloc[i].High),
-                        low = float(df.iloc[i].Low),
-                        close = float(df.iloc[i].Close),
-                        volume = int(df.iloc[i].Volume),
-                        adj_close = float(df.iloc[i]["Adj Close"])
-                        )
+        try:
+            # first check if it's already in database
+            if db.query(StockData).filter(StockData.ticker == ticker).first() is None:
+                lookback = "5y"
+            else:
+                lookback = "201d"
+            # if not, add complete history
+            df = yf.download(ticker, interval = "1d", period=lookback, progress=False)
+            # stockdataobjects = []
+            if len(df) == 0:
+                raise ValueError("No data for ticker " + ticker)
+            for i in range(len(df)):
+                if df.iloc[i].Volume > 0: # it is 0 if the day is not yet complete
+                    stockobj = StockData(
+                            timestamp = pd.to_datetime(df.index[i]),
+                            ticker = ticker,
+                            open = float(df.iloc[i].Open),
+                            high = float(df.iloc[i].High),
+                            low = float(df.iloc[i].Low),
+                            close = float(df.iloc[i].Close),
+                            volume = int(df.iloc[i].Volume),
+                            adj_close = float(df.iloc[i]["Adj Close"])
+                            )
+                    try:
+                        db.merge(stockobj)
+                        db.commit()
+                    except Exception as e:
+                        print("Stockdata SQL insert error with: " + ticker)
+                        logError("stockdata_update_sql_insert", ticker, str(repr(e)))
+                        print(e)
+            # next add technical indicators
+            df = dropna(df)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                df = add_all_ta_features(
+                    df, open="Open", high="High", low="Low", close="Close", volume="Volume", fillna=True)
+            df["SMA_3"] = df["Close"].rolling(window=3).mean()
+            df["SMA_10"] = df["Close"].rolling(window=10).mean()
+            df["SMA_50"] = df["Close"].rolling(window=50).mean()
+            df["SMA_200"] = df["Close"].rolling(window=200).mean()
+
+            # fill zero values with the previous value
+            # df format: earlier -> later, therefore we need to bfill to avoid taking future information
+            df = df.replace(0, method="bfill")
+
+            # drop standard shiet
+            df = df.drop(columns=["Open", "High", "Low", "Close", "Volume", "Adj Close"])
+            # then do the same
+            for i in range(len(df)):
+                rowdict = df.iloc[i].to_dict()
+                rowdict["timestamp"] = pd.to_datetime(df.index[i])
+                rowdict["ticker"] = ticker
+                ta_obj = TechnicalAnalysis(**rowdict)
                 try:
-                    db.merge(stockobj)
+                    db.merge(ta_obj)
                     db.commit()
                 except Exception as e:
-                    print("Stockdata SQL insert error with: " + ticker)
-                    logError("stockdata_update_sql_insert", ticker, str(repr(e)))
+                    print("TA SQL insert error with: " + ticker)
+                    logError("ta_update_sql_insert", ticker, str(repr(e)))
                     print(e)
-        # next add technical indicators
-        df = dropna(df)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            df = add_all_ta_features(
-                df, open="Open", high="High", low="Low", close="Close", volume="Volume", fillna=True)
-        df["SMA_3"] = df["Close"].rolling(window=3).mean()
-        df["SMA_10"] = df["Close"].rolling(window=10).mean()
-        df["SMA_50"] = df["Close"].rolling(window=50).mean()
-        df["SMA_200"] = df["Close"].rolling(window=200).mean()
-
-        # fill zero values with the previous value
-        # df format: earlier -> later, therefore we need to bfill to avoid taking future information
-        df = df.replace(0, method="bfill")
-
-        # drop standard shiet
-        df = df.drop(columns=["Open", "High", "Low", "Close", "Volume", "Adj Close"])
-        # then do the same
-        for i in range(len(df)):
-            rowdict = df.iloc[i].to_dict()
-            rowdict["timestamp"] = pd.to_datetime(df.index[i])
-            rowdict["ticker"] = ticker
-            ta_obj = TechnicalAnalysis(**rowdict)
+            # grab earnings updates
             try:
-                db.merge(ta_obj)
-                db.commit()
+                updateEarnings(ticker, db)
             except Exception as e:
-                print("TA SQL insert error with: " + ticker)
-                logError("ta_update_sql_insert", ticker, str(repr(e)))
+                logError("earnings_update", ticker, str(repr(e)))
                 print(e)
-        # grab earnings updates
-        try:
-            updateEarnings(ticker, db)
+                    
+            # next news sentiment update
+            try:
+                updateNews(ticker, db)
+            except Exception as e:
+                print("problem in news update: " + ticker)
+                logError("news_update", ticker, str(repr(e)))
+                print(e)
+            # next get recommendation update
+            try:
+                getRecommendations(ticker, db)
+            except Exception as e:
+                print("problem in recommendation update: " + ticker)
+                logError("analyst_update", ticker, str(repr(e)))
+                print(e)
         except Exception as e:
-            logError("earnings_update", ticker, str(repr(e)))
-            print(e)
-                
-        # next news sentiment update
-        try:
-            updateNews(ticker, db)
-        except Exception as e:
-            print("problem in news update: " + ticker)
-            logError("news_update", ticker, str(repr(e)))
-            print(e)
-        # next get recommendation update
-        try:
-            getRecommendations(ticker, db)
-        except Exception as e:
-            print("problem in recommendation update: " + ticker)
-            logError("analyst_update", ticker, str(repr(e)))
-            print(e)
+            logError("update_function", ticker, str(repr(e)))
+            print("problem in general update: " + ticker)
     # trigger the last update of earning ratings by analyst (custom yahoo data)
     await updateYahooEarningsRatingsData(ALLOWED_STOCKS, db)
 
