@@ -19,4 +19,8 @@ ALLOWED_STOCKS = [
     "META", "PYPL", "ADBE", # big tech momentum
     "UPRO", # hedgefundie,
     "BSV", "SQQQ", # buy the dippies
+    # opus
+    'NTSX', 'DMBF', 'VDE', 'VNQ', 'VHT', 'VFH', 'VOX', 'VPU', 
+    'VAW', 'VGT', 'VIS', 'VDC', 'VCR', 'VLUE', 'FNDX', 'VTV', 'RWL', 'DBA', 'SHV', 
+    'DBB', 'DBO', 'URA', 'WOOD', 'DBE',
 ]
