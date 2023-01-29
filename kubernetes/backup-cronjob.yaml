@@ -19,25 +19,17 @@ spec:
             - name: PSQL_PORT
               value: "5432"
             - name: S3_BUCKET
-              value: "tradingbot22-manual-backup"
-            - name: S3_PATH
-              value: ""
+              value: "backup-tradingbot22"
             - name: S3_REGION
-              value: "eu-central-2"
+              value: "eu-central-1"
             - name: S3_ENDPOINT
-              value: "https://s3.eu-central-2.wasabisys.com"
+              value: "https://s3.eu-central-1.amazonaws.com"
             ## secrets
             # psql
             - name: PSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: s3backuptarget
-                  key: PSQL_USER
+              value: postgres
             - name: PSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: s3backuptarget
-                  key: PSQL_PASSWORD
+              value: postgres
             # AWS
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
