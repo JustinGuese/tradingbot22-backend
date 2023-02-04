@@ -9,6 +9,7 @@ from allowed_stocks import ALLOWED_STOCKS
 from alpy import AlpacaInterface
 from db import Bot, Trade
 from elastic import logToElastic
+from notification import sendToSlack
 from pricing_functions import COMMISSION, __getCurrentPrice
 
 alpacaInterface = AlpacaInterface()
@@ -20,8 +21,9 @@ async def __liveBuy(bot, ticker, amount, short, currentPrice):
         raise HTTPException(status_code=400, detail="Amount for live buy cant be negative")
     try:
         alpacaInterface.buyLive(ticker, amount)
+        sendToSlack(bot.name, f"just bought {round(amount * currentPrice,2)}$ of {ticker}", "info")
     except Exception as e:
-        logToElastic("tradingbot22_live_errors", {
+        body = {
             "botName" : bot.name, 
             "@timestamp" : datetime.utcnow().isoformat(),
             "ticker": ticker,
@@ -31,15 +33,18 @@ async def __liveBuy(bot, ticker, amount, short, currentPrice):
             "price": currentPrice,
             "quantity": amount,
             "error" : str(e)
-            })
+            }
+        logToElastic("tradingbot22_live_errors", body)
         print("Alpaca Error while buying live: " + str(e))
+        sendToSlack(bot.name, "Alpaca 1. buy live denied: " + str(e) + " content: " + json.dumps(body), "info")
     # most of the time error happens bc only int works
     amount = int(amount)
     if amount > 0:
         try:
             alpacaInterface.buyLive(ticker, amount)
+            sendToSlack(bot.name, f"just bought {round(amount * currentPrice,2)}$ of {ticker}", "info")
         except Exception as e:
-            logToElastic("tradingbot22_live_errors", {
+            body = {
                 "botName" : bot.name, 
                 "@timestamp" : datetime.utcnow().isoformat(),
                 "ticker": ticker,
@@ -49,7 +54,9 @@ async def __liveBuy(bot, ticker, amount, short, currentPrice):
                 "price": currentPrice,
                 "quantity": amount,
                 "error" : str(e)
-                })
+                }
+            logToElastic("tradingbot22_live_errors", body)
+            sendToSlack(bot.name, "Alpaca 2. buy live error: " + str(e) + " content: " + json.dumps(body), "error")
             raise HTTPException(status_code = 500, details="Alpaca Error while buying live: " + str(e))
     return amount
 
@@ -60,8 +67,9 @@ def __liveSell(bot, ticker, amount, short, currentPrice):
         raise HTTPException(status_code=400, detail="Amount for live buy cant be negative")
     try:
         alpacaInterface.sellLive(ticker, amount)
+        sendToSlack(bot.name, f"just sold {round(amount * currentPrice,2)}$ of {ticker}", "info")
     except Exception as e:
-        logToElastic("tradingbot22_live_errors", {
+        body = {
             "botName" : bot.name, 
             "@timestamp" : datetime.utcnow().isoformat(),
             "ticker": ticker,
@@ -71,15 +79,18 @@ def __liveSell(bot, ticker, amount, short, currentPrice):
             "price": currentPrice,
             "quantity": amount,
             "error" : str(e)
-            })
+            }
+        logToElastic("tradingbot22_live_errors", body)
         print("Alpaca Error while buying live: " + str(e))
+        sendToSlack(bot.name, "Alpaca 1. sell live denied: " + str(e) + " content: " + json.dumps(body), "info")
     # most of the time error happens bc only int works
     amount = int(amount)
     if amount > 0:
         try:
-            alpacaInterface.buyLive(ticker, amount)
+            alpacaInterface.sellLive(ticker, amount)
+            sendToSlack(bot.name, f"just sold {round(amount * currentPrice,2)}$ of {ticker}", "info")
         except Exception as e:
-            logToElastic("tradingbot22_live_errors", {
+            body = {
                 "botName" : bot.name, 
                 "@timestamp" : datetime.utcnow().isoformat(),
                 "ticker": ticker,
@@ -89,8 +100,10 @@ def __liveSell(bot, ticker, amount, short, currentPrice):
                 "price": currentPrice,
                 "quantity": amount,
                 "error" : str(e)
-                })
-            raise HTTPException(status_code = 500, details="Alpaca Error while buying live: " + str(e))
+                }
+            logToElastic("tradingbot22_live_errors", body)
+            sendToSlack(bot.name, "Alpaca 2. sell live error: " + str(e) + " content: " + json.dumps(body), "error")
+            raise HTTPException(status_code = 500, details="Alpaca Error while selling live: " + str(e))
     return amount
 
 async def __buy_stock(botname: str, ticker: str, 

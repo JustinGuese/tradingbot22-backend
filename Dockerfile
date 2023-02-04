@@ -10,6 +10,7 @@ COPY ./src/stoploss_takeprofit.py /app/
 COPY ./src/pricing_functions.py /app/
 COPY ./src/check_open_stoploss.py /app/
 COPY ./src/db.py /app/
+COPY ./src/notification.py /app/
 COPY ./src/elastic.py /app/
 COPY ./src/language.py /app/
 COPY ./src/earnings.py /app/
