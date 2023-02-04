@@ -12,3 +12,4 @@ elasticsearch
 newspaper3k
 GoogleNews
 nltk
+alpaca-py

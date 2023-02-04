@@ -22,6 +22,16 @@ spec:
         - env:
             - name: PSQL_URL
               value: postgres:postgres@postgres-service:5432/postgres # i mean it's a prototype so come on
+            - name: ALPACA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: apikey
+                  name: alpaca-api-secret
+            - name: ALPACA_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: apisecret
+                  name: alpaca-api-secret
           image: guestros/tradingbot22-backend:latest
           name: tradingbot-backend
           ports:

@@ -6,10 +6,92 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from allowed_stocks import ALLOWED_STOCKS
+from alpy import AlpacaInterface
 from db import Bot, Trade
 from elastic import logToElastic
 from pricing_functions import COMMISSION, __getCurrentPrice
 
+alpacaInterface = AlpacaInterface()
+
+async def __liveBuy(bot, ticker, amount, short, currentPrice):
+    # this works for both long and shor
+    #### attention, is live!!!!
+    if amount < 0:
+        raise HTTPException(status_code=400, detail="Amount for live buy cant be negative")
+    try:
+        alpacaInterface.buyLive(ticker, amount)
+    except Exception as e:
+        logToElastic("tradingbot22_live_errors", {
+            "botName" : bot.name, 
+            "@timestamp" : datetime.utcnow().isoformat(),
+            "ticker": ticker,
+            "buy": True,
+            "LIVE" : True,
+            "short": short,
+            "price": currentPrice,
+            "quantity": amount,
+            "error" : str(e)
+            })
+        print("Alpaca Error while buying live: " + str(e))
+    # most of the time error happens bc only int works
+    amount = int(amount)
+    if amount > 0:
+        try:
+            alpacaInterface.buyLive(ticker, amount)
+        except Exception as e:
+            logToElastic("tradingbot22_live_errors", {
+                "botName" : bot.name, 
+                "@timestamp" : datetime.utcnow().isoformat(),
+                "ticker": ticker,
+                "buy": True,
+                "LIVE" : True,
+                "short": short,
+                "price": currentPrice,
+                "quantity": amount,
+                "error" : str(e)
+                })
+            raise HTTPException(status_code = 500, details="Alpaca Error while buying live: " + str(e))
+    return amount
+
+def __liveSell(bot, ticker, amount, short, currentPrice):
+    # this works for both long and shor
+    #### attention, is live!!!!
+    if amount < 0:
+        raise HTTPException(status_code=400, detail="Amount for live buy cant be negative")
+    try:
+        alpacaInterface.sellLive(ticker, amount)
+    except Exception as e:
+        logToElastic("tradingbot22_live_errors", {
+            "botName" : bot.name, 
+            "@timestamp" : datetime.utcnow().isoformat(),
+            "ticker": ticker,
+            "buy": True,
+            "LIVE" : True,
+            "short": short,
+            "price": currentPrice,
+            "quantity": amount,
+            "error" : str(e)
+            })
+        print("Alpaca Error while buying live: " + str(e))
+    # most of the time error happens bc only int works
+    amount = int(amount)
+    if amount > 0:
+        try:
+            alpacaInterface.buyLive(ticker, amount)
+        except Exception as e:
+            logToElastic("tradingbot22_live_errors", {
+                "botName" : bot.name, 
+                "@timestamp" : datetime.utcnow().isoformat(),
+                "ticker": ticker,
+                "buy": True,
+                "LIVE" : True,
+                "short": short,
+                "price": currentPrice,
+                "quantity": amount,
+                "error" : str(e)
+                })
+            raise HTTPException(status_code = 500, details="Alpaca Error while buying live: " + str(e))
+    return amount
 
 async def __buy_stock(botname: str, ticker: str, 
         db: Session, amount: float = -1,
@@ -42,9 +124,12 @@ async def __buy_stock(botname: str, ticker: str,
         elif bot.portfolio[ticker] < 0 and not short:
             # uhoh!
             raise HTTPException(status_code=400, detail="Already short on this stock. cant open long. sell first")
-        # this works for both long and short
+        if bot.live_bot:
+            amount = __liveBuy(bot, ticker, amount, short, currentPrice)
         bot.portfolio[ticker] += amount
     else:
+        if bot.live_bot:
+            amount = __liveBuy(bot, ticker, amount, short, currentPrice)
         bot.portfolio[ticker] = amount
         
     # abs to support shorts and long
@@ -57,7 +142,9 @@ async def __buy_stock(botname: str, ticker: str,
             buy = True,
             short = short,
             price = currentPrice,
-            quantity = amount)
+            quantity = amount,
+            live = bot.live_bot
+            )
     db.add(trade)
     db.commit()
     # and finally log 2 elastic, silently fails if not reachable
@@ -103,6 +190,8 @@ async def __sell_stock(botname: str, ticker: str,
     # add trade on bot
     if bot.portfolio[ticker] > 0:
         # long, is no short
+        if bot.live_bot:
+            amount = __liveSell(bot, ticker, amount, short, currentPrice)
         bot.portfolio[ticker] -= amount
         bot.portfolio["USD"] += amount * currentPrice * (1 - COMMISSION)
     elif bot.portfolio[ticker] < 0 and short:
@@ -110,6 +199,8 @@ async def __sell_stock(botname: str, ticker: str,
         # we need to load the price from the db to calculate the profit
         theBuyTrade = db.query(Trade).filter(Trade.bot == botname).filter(Trade.ticker == ticker).filter(Trade.buy == True).filter(Trade.short == True).order_by(Trade.id.desc()).first()
         diff = theBuyTrade.price - currentPrice
+        if bot.live_bot:
+            amount = __liveSell(bot, ticker, amount, short, currentPrice)
         bot.portfolio["USD"] += (theBuyTrade.price + diff) * abs(amount) * (1 - COMMISSION)
         bot.portfolio[ticker] += abs(amount)
     else:
@@ -124,7 +215,9 @@ async def __sell_stock(botname: str, ticker: str,
             buy = False,
             short = short,
             price = currentPrice,
-            quantity = amount)
+            quantity = amount,
+            live = bot.live_bot
+            )
     db.add(trade)
     db.commit()
     # and finally log 2 elastic, silently fails if not reachable

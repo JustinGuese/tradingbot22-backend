@@ -1,0 +1,17 @@
+version: "3.4"
+
+services:
+  ib-gateway:
+    image: ghcr.io/unusualalpha/ib-gateway:latest
+    restart: always
+    environment:
+      # TWS_USERID: ${TWS_USERID}
+      # TWS_PASSWORD: ${TWS_PASSWORD}
+      TRADING_MODE: "paper" # ${TRADING_MODE:-live}
+      VNC_SERVER_PASSWORD: "tendies" # ${VNC_SERVER_PASSWORD:-}
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:4001:4001"
+      - "127.0.0.1:4002:4002"
+      - "127.0.0.1:5900:5900"
