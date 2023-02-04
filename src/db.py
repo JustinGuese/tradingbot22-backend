@@ -51,7 +51,7 @@ class Bot(Base):
     startMoney = Column(Float, default = 10000)
     portfolio = Column(MutableDict.as_mutable(JSON), default = lambda: {"USD": 10000})
     portfolioWorth = Column(Float, default = 10000.)
-    live_bot = Column(Boolean, default = False)
+    live = Column(Boolean, default = False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -416,6 +416,7 @@ QuarterlyFinancialsEffectPD = sqlalchemy_to_pydantic(QuarterlyFinancialsEffect)
 class NewBotPD(BaseModel):
     name: str
     description: str
+    live: bool = False
 
 class GetTradeDataPD(BaseModel):
     ticker: str

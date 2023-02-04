@@ -124,12 +124,12 @@ async def __buy_stock(botname: str, ticker: str,
         elif bot.portfolio[ticker] < 0 and not short:
             # uhoh!
             raise HTTPException(status_code=400, detail="Already short on this stock. cant open long. sell first")
-        if bot.live_bot:
-            amount = __liveBuy(bot, ticker, amount, short, currentPrice)
+        if bot.live:
+            amount = await __liveBuy(bot, ticker, amount, short, currentPrice)
         bot.portfolio[ticker] += amount
     else:
-        if bot.live_bot:
-            amount = __liveBuy(bot, ticker, amount, short, currentPrice)
+        if bot.live:
+            amount = await __liveBuy(bot, ticker, amount, short, currentPrice)
         bot.portfolio[ticker] = amount
         
     # abs to support shorts and long
@@ -143,7 +143,7 @@ async def __buy_stock(botname: str, ticker: str,
             short = short,
             price = currentPrice,
             quantity = amount,
-            live = bot.live_bot
+            live = bot.live
             )
     db.add(trade)
     db.commit()
@@ -190,8 +190,8 @@ async def __sell_stock(botname: str, ticker: str,
     # add trade on bot
     if bot.portfolio[ticker] > 0:
         # long, is no short
-        if bot.live_bot:
-            amount = __liveSell(bot, ticker, amount, short, currentPrice)
+        if bot.live:
+            amount = await __liveSell(bot, ticker, amount, short, currentPrice)
         bot.portfolio[ticker] -= amount
         bot.portfolio["USD"] += amount * currentPrice * (1 - COMMISSION)
     elif bot.portfolio[ticker] < 0 and short:
@@ -199,8 +199,8 @@ async def __sell_stock(botname: str, ticker: str,
         # we need to load the price from the db to calculate the profit
         theBuyTrade = db.query(Trade).filter(Trade.bot == botname).filter(Trade.ticker == ticker).filter(Trade.buy == True).filter(Trade.short == True).order_by(Trade.id.desc()).first()
         diff = theBuyTrade.price - currentPrice
-        if bot.live_bot:
-            amount = __liveSell(bot, ticker, amount, short, currentPrice)
+        if bot.live:
+            amount = await __liveSell(bot, ticker, amount, short, currentPrice)
         bot.portfolio["USD"] += (theBuyTrade.price + diff) * abs(amount) * (1 - COMMISSION)
         bot.portfolio[ticker] += abs(amount)
     else:
@@ -216,7 +216,7 @@ async def __sell_stock(botname: str, ticker: str,
             short = short,
             price = currentPrice,
             quantity = amount,
-            live = bot.live_bot
+            live = bot.live
             )
     db.add(trade)
     db.commit()
