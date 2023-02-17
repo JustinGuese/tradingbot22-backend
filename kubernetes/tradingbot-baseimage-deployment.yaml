@@ -21,7 +21,7 @@ spec:
       containers:
         - env:
             - name: PSQL_URL
-              value: postgres:Pug875613@postgres-service.dbstaging.svc.cluster.local:5432/postgres # i mean it's a prototype so come on
+              value: postgres:pug875613@postgres-service.dbstaging.svc.cluster.local:5432/postgres # i mean it's a prototype so come on
             - name: ALPACA_API_KEY
               valueFrom:
                 secretKeyRef:
