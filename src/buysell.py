@@ -184,13 +184,13 @@ async def __sell_stock(botname: str, ticker: str,
     currentPrice = await __getCurrentPrice(ticker)
     # check if bot has enough stock
     if ticker not in bot.portfolio:
-        raise HTTPException(status_code=404, detail="you do not own that stock to sell")
+        raise HTTPException(status_code=404, detail="you do not own %s to sell. not in portfolio. portfolio is: " % ticker + str(bot.portfolio))
     if amount < 0 and amount != -1:
         raise HTTPException(status_code=400, detail="Amount cant be negative. is: " + str(amount))
     if amount == -1:
         amount = bot.portfolio[ticker]
     if bot.portfolio[ticker] == 0:
-        raise HTTPException(status_code=400, detail="you do not own that stock to sell")
+        raise HTTPException(status_code=400, detail="you do not own %s to sell. amount is 0" % ticker)
     if amountInUSD:
         amount = amount / currentPrice * (1 - COMMISSION)
     if bot.portfolio[ticker] < 0 and not short:
