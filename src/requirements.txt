@@ -8,9 +8,10 @@ yfinance
 pandas
 ta
 tqdm
-elasticsearch
+pymongo
 newspaper3k
 GoogleNews
 nltk
 alpaca-py
 requests
+matplotlib

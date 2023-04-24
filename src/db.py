@@ -388,6 +388,14 @@ class StopLoss(Base):
     close_if_below = Column(Float)
     close_if_above = Column(Float)
     maximum_date = Column(DateTime, nullable = True) # close it if this date is reached"
+    
+class PortfolioWorths(Base):
+    __tablename__ = "portfolio_worths"
+    bot = Column(String, ForeignKey("bots.name", ondelete="CASCADE"))
+    timestamp = Column(DateTime, primary_key=True, index=True, default = datetime.utcnow)
+    pctPerYear = Column(Float)
+    portfolio = Column(MutableDict.as_mutable(JSON))
+    worth = Column(Float)
 
 class EarningRatings(Base):
     __tablename__ = "earning_ratings"

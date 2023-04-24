@@ -4,6 +4,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+import uvicorn
 import yfinance as yf
 from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy import and_, extract, or_
@@ -17,11 +18,13 @@ from buysell import __buy_stock, __sell_stock
 from check_open_stoploss import checkOpenStoplosses
 from db import (TA_COLUMNS, Bot, BotPD, EarningDates, EarningDatesPD,
                 EarningRatings, EarningRatingsPD, GetTradeDataPD, NewBotPD,
-                QuarterlyFinancials, QuarterlyFinancialsEffect,
-                QuarterlyFinancialsEffectPD, QuarterlyFinancialsPD, StockData,
-                TAType, TechnicalAnalysis, Trade, get_db)
+                PortfolioWorths, QuarterlyFinancials,
+                QuarterlyFinancialsEffect, QuarterlyFinancialsEffectPD,
+                QuarterlyFinancialsPD, StockData, TAType, TechnicalAnalysis,
+                Trade, get_db)
 from earnings import updateEarningEffect, updateEarnings
 from elastic import logError, logToElastic
+from graphs import getCurrentPortfolioGraph
 from language import updateNews
 from pricing_functions import __getCurrentPrice
 from stoploss_takeprofit import __buy_stock_stoploss, __sell_stock_stoploss
@@ -147,12 +150,21 @@ async def update_portfolioworth(db: Session = Depends(get_db)):
         bot.portfolioWorth = worth
         db.commit()
         # and try to log 2 elastic if it's up (otherwise it will just skip)
-        logToElastic("tradingbot22_portfolio_worth", {
-            "botName" : bot.name, "portfolioWorth" : worth, 
-            "@timestamp" : datetime.utcnow().isoformat(),
-            "pctPerYear" : calculatePctPerYear(worth, bot.created_at),
-            "portfolio" : bot.portfolio
-            })
+        # logToElastic("tradingbot22_portfolio_worth", {
+        #     "botName" : bot.name, "portfolioWorth" : worth, 
+        #     "@timestamp" : datetime.utcnow().isoformat(),
+        #     "pctPerYear" : calculatePctPerYear(worth, bot.created_at),
+        #     "portfolio" : bot.portfolio
+        #     })
+        pws = PortfolioWorths(
+            bot = bot.name,
+            timestamp = datetime.utcnow(),
+            pctPerYear = calculatePctPerYear(worth, bot.created_at),
+            worth = worth,
+            portfolio = bot.portfolio,
+        )
+        db.add(pws)
+    db.commit()
         
 @app.get("/update/earningeffects")
 async def update_earningeffects(db: Session = Depends(get_db)):
@@ -439,3 +451,13 @@ async def getAllEarningsRatings(db: Session = Depends(get_db)):
             response.append(earnRatObj)
             alreadyHave.append(res.ticker)
     return response
+
+
+## graph plot
+@app.get("/plot/portfolioworths", tags = ["data", "plot"])
+async def getPlotPortfolio(db: Session = Depends(get_db)):
+    figure = await getCurrentPortfolioGraph(db)
+    return figure
+
+if __name__ == "__main__":
+    uvicorn.run(app)

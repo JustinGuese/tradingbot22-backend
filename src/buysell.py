@@ -6,13 +6,13 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from allowed_stocks import ALLOWED_STOCKS
-from alpy import AlpacaInterface
+# from alpy import AlpacaInterface
 from db import Bot, Trade
 from elastic import logToElastic
 from notification import sendToSlack
 from pricing_functions import COMMISSION, __getCurrentPrice
 
-alpacaInterface = AlpacaInterface()
+# alpacaInterface = AlpacaInterface()
 
 async def __liveBuy(bot, ticker, amount, short, currentPrice):
     # this works for both long and shor
@@ -20,8 +20,9 @@ async def __liveBuy(bot, ticker, amount, short, currentPrice):
     if amount < 0:
         raise HTTPException(status_code=400, detail="Amount for live buy cant be negative")
     try:
-        alpacaInterface.buyLive(ticker, amount)
-        sendToSlack(bot.name, f"just bought {round(amount * currentPrice,2)}$ of {ticker}", "info")
+        # alpacaInterface.buyLive(ticker, amount)
+        # sendToSlack(bot.name, f"just bought {round(amount * currentPrice,2)}$ of {ticker}", "info")
+        pass
     except Exception as e:
         body = {
             "botName" : bot.name, 
