@@ -17,5 +17,6 @@ COPY ./src/earnings.py /app/
 COPY ./src/yfrecommendations.py /app/
 COPY ./src/yahoo_extras.py /app/
 COPY ./src/alpy.py /app/
+COPY ./src/graphs.py /app/
 COPY ./src/app.py /app/
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0"]
