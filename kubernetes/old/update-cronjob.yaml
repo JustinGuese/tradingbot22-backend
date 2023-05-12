@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: tradingbot22-data-update
+  name: 0-data-update
   namespace: tradingbot22
 spec:
   schedule: "0 23 */1 * *"

@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: earnings-effect-update
+  name: 0-earnings-effect-update
   namespace: tradingbot22
 spec:
   schedule: "1 0 1 * *" # once a month at 00:01
