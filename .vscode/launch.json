@@ -13,7 +13,6 @@
             "justMyCode": true,
             "env": {
                 "PSQL_URL" : "postgres:postgres@localhost:31000/postgres",
-                "MONGO_URL" : "mongodb://localhost:27017",
             }
         }
     ]

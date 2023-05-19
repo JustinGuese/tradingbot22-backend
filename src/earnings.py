@@ -13,7 +13,12 @@ def createTicker(ticker: str) -> yf.Ticker:
     return yf.Ticker(ticker)
 
 def writeEarningsDates(tickerobj: yf.Ticker, ticker: str, db: Session):
-    calendar = tickerobj.calendar
+    try:
+        calendar = tickerobj.calendar
+    except Exception as e:
+        print("could not get earnings calendar for ticker", ticker)
+        return
+        
     if len(calendar) == 0:
         print("could not get earnings calendar for ticker", ticker)
         return
@@ -44,7 +49,11 @@ def bigIntFix(possibleint):
     
 def writeQuarterlyFinancials(tickerobj: yf.Ticker, ticker: str, db: Session):
     # quarterly financials
-    quarter = tickerobj.quarterly_financials
+    try:
+        quarter = tickerobj.quarterly_financials
+    except Exception as e:
+        print("could not get quarterly financials for ticker", ticker)
+        return
     quarter = quarter.T
     for date, row in quarter.iterrows():
         # first check if in db

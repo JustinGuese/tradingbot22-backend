@@ -105,6 +105,7 @@ async def __update(db: Session):
             try:
                 updateEarnings(ticker, db)
             except Exception as e:
+                print("problem in earnings update: " + ticker)
                 logError("earnings_update", ticker, str(repr(e)))
                 print(e)
                     
@@ -150,12 +151,12 @@ async def update_portfolioworth(db: Session = Depends(get_db)):
         bot.portfolioWorth = worth
         db.commit()
         # and try to log 2 elastic if it's up (otherwise it will just skip)
-        # logToElastic("tradingbot22_portfolio_worth", {
-        #     "botName" : bot.name, "portfolioWorth" : worth, 
-        #     "@timestamp" : datetime.utcnow().isoformat(),
-        #     "pctPerYear" : calculatePctPerYear(worth, bot.created_at),
-        #     "portfolio" : bot.portfolio
-        #     })
+        logToElastic("tradingbot22_portfolio_worth-" + datetime.now().strftime("%Y-%m"), {
+            "botName" : bot.name, "portfolioWorth" : worth, 
+            "@timestamp" : datetime.utcnow().isoformat(),
+            "pctPerYear" : calculatePctPerYear(worth, bot.created_at),
+            "portfolio" : bot.portfolio
+            })
         pws = PortfolioWorths(
             bot = bot.name,
             timestamp = datetime.utcnow(),

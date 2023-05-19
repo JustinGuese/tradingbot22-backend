@@ -8,7 +8,7 @@ yfinance
 pandas
 ta
 tqdm
-pymongo
+elasticsearch
 newspaper3k
 GoogleNews
 nltk
