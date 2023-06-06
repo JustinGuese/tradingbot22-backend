@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from os import environ
 
 import yfinance as yf
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -171,6 +172,9 @@ async def __buy_stock(botname: str, ticker: str,
             "price": currentPrice,
             "quantity": amount
             })
+    # if botname in ALERT_ON_BUY env var, send a slack message
+    if bot.name in environ.get("ALERT_ON_BUY", "").split(","):
+        sendToSlack(bot.name, f"buy {round(amount * currentPrice,2)}$ or {round(amount,2)} of {ticker}", "info")
     return trade.id
 
 async def __sell_stock(botname: str, ticker: str, 
@@ -244,5 +248,8 @@ async def __sell_stock(botname: str, ticker: str,
             "price": currentPrice,
             "quantity": amount
             })
+    # if botname in ALERT_ON_BUY env var, send a slack message
+    if bot.name in environ.get("ALERT_ON_BUY", "").split(","):
+        sendToSlack(bot.name, f"sell {round(amount * currentPrice,2)}$ or {round(amount,2)} of {ticker}", "info")
     return trade.id
 

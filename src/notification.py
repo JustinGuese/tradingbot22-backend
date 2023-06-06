@@ -2,6 +2,7 @@
 
 import json
 import sys
+from os import environ
 
 import requests
 
@@ -18,7 +19,7 @@ SEVERITIES = {
     }
 }
 
-SLACKURL = "https://hooks.slack.com/services/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"
+SLACKURL = environ.get("SLACKURL","https://hooks.slack.com/services/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")
 
 def sendToSlack(botname, message: str, severity = "info"):
     message = (message)
