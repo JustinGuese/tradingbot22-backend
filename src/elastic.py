@@ -6,11 +6,12 @@ from elasticsearch import Elasticsearch
 MONTHDATE = datetime.now().strftime("%Y-%m")
 
 ES = None
-ES = Elasticsearch(environ.get("ELASTICSEARCH_URL", "http://localhost:9200"))
 
 try:
+    ES = Elasticsearch(environ.get("ELASTICSEARCH_URL", "http://localhost:9200"))
     print(ES.info())
 except Exception as e:
+    print("Elastic Error: ", e)
     ES = None
 
 

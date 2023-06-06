@@ -22,8 +22,6 @@ spec:
         - env:
             - name: PSQL_URL
               value: postgres:postgres@postgres-service.dbstaging.svc.cluster.local:5432/postgres # i mean it's a prototype so come on
-            - name: MONGO_URL
-              value: mongodb://mongodb-service.dbstaging.svc.cluster.local:27017
             - name: ALPACA_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -34,8 +32,17 @@ spec:
                 secretKeyRef:
                   key: apisecret
                   name: alpaca-api-secret
+            - name: ELASTICSEARCH_URL
+              value: http://elasticsearch.kube-logging.svc.cluster.local:9200
           image: guestros/tradingbot22-backend:latest
           name: tradingbot-backend
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 50Mi
           ports:
             - containerPort: 8000
           livenessProbe:
