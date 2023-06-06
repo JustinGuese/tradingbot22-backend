@@ -22,6 +22,12 @@ spec:
         - env:
             - name: ALERT_ON_BUY
               value: "composer-buydipsqqq-shorting-adapted,eiten_longonly_daily_weeklyRebalance_testtype-sim,composer-bigtechmomentum-v1"
+            - name: SLACKURL
+              valueFrom:
+                secretKeyRef:
+                  key: slackurl
+                  name: slackurl
+                  # kubectl create secret generic slackurl --from-literal=slackurl=https://hooks.slack.com/services/... -n tradingbot22
             - name: PSQL_URL
               value: postgres:postgres@postgres-service.dbstaging.svc.cluster.local:5432/postgres # i mean it's a prototype so come on
             - name: ALPACA_API_KEY
