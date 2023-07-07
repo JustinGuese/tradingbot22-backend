@@ -13,6 +13,7 @@
             "justMyCode": true,
             "env": {
                 "PSQL_URL" : "postgres:postgres@localhost:31000/postgres",
+                "OPENOBSERVE_URL" : "http://localhost:5080",
             }
         }
     ]

@@ -27,7 +27,7 @@ async def __liveBuy(bot, ticker, amount, short, currentPrice):
     except Exception as e:
         body = {
             "botName" : bot.name, 
-            "@timestamp" : datetime.utcnow().isoformat(),
+            "@timestamp" : datetime.utcnow(),
             "ticker": ticker,
             "buy": True,
             "LIVE" : True,
@@ -48,7 +48,7 @@ async def __liveBuy(bot, ticker, amount, short, currentPrice):
         except Exception as e:
             body = {
                 "botName" : bot.name, 
-                "@timestamp" : datetime.utcnow().isoformat(),
+                "@timestamp" : datetime.utcnow(),
                 "ticker": ticker,
                 "buy": True,
                 "LIVE" : True,
@@ -73,7 +73,7 @@ def __liveSell(bot, ticker, amount, short, currentPrice):
     except Exception as e:
         body = {
             "botName" : bot.name, 
-            "@timestamp" : datetime.utcnow().isoformat(),
+            "@timestamp" : datetime.utcnow(),
             "ticker": ticker,
             "buy": True,
             "LIVE" : True,
@@ -94,7 +94,7 @@ def __liveSell(bot, ticker, amount, short, currentPrice):
         except Exception as e:
             body = {
                 "botName" : bot.name, 
-                "@timestamp" : datetime.utcnow().isoformat(),
+                "@timestamp" : datetime.utcnow(),
                 "ticker": ticker,
                 "buy": True,
                 "LIVE" : True,
@@ -165,7 +165,7 @@ async def __buy_stock(botname: str, ticker: str,
     # and finally log 2 elastic, silently fails if not reachable
     logToElastic("tradingbot22_trades", {
             "botName" : bot.name, 
-            "@timestamp" : datetime.utcnow().isoformat(),
+            "@timestamp" : datetime.utcnow(),
             "ticker": ticker,
             "buy": True,
             "short": short,
@@ -241,7 +241,7 @@ async def __sell_stock(botname: str, ticker: str,
     # and finally log 2 elastic, silently fails if not reachable
     logToElastic("tradingbot22_trades", {
             "botName" : bot.name, 
-            "@timestamp" : datetime.utcnow().isoformat(),
+            "@timestamp" : datetime.utcnow(),
             "ticker": ticker,
             "buy": False,
             "short": short,

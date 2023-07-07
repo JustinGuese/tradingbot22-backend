@@ -153,9 +153,9 @@ async def update_portfolioworth(db: Session = Depends(get_db)):
         # and try to log 2 elastic if it's up (otherwise it will just skip)
         logToElastic("tradingbot22_portfolio_worth-" + datetime.now().strftime("%Y-%m"), {
             "botName" : bot.name, "portfolioWorth" : worth, 
-            "@timestamp" : datetime.utcnow().isoformat(),
-            "pctPerYear" : calculatePctPerYear(worth, bot.created_at),
-            "portfolio" : bot.portfolio
+            "@timestamp" : datetime.utcnow(),
+            "pctPerYear" : round(calculatePctPerYear(worth, bot.created_at),2),
+            "portfolio" : { k: round(v,2) for k,v in dict(bot.portfolio).items() }
             })
         pws = PortfolioWorths(
             bot = bot.name,

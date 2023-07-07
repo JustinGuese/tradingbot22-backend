@@ -8,10 +8,10 @@ yfinance
 pandas
 ta
 tqdm
-elasticsearch
 newspaper3k
 GoogleNews
 nltk
 alpaca-py
 requests
 matplotlib
+python-openobserve==0.1.3
