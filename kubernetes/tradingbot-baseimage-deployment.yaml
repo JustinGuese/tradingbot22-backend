@@ -40,8 +40,8 @@ spec:
                 secretKeyRef:
                   key: apisecret
                   name: alpaca-api-secret
-            - name: ELASTICSEARCH_URL
-              value: http://elasticsearch.kube-logging.svc.cluster.local:9200
+            - name: OPENOBSERVE_URL
+              value: http://openobserve.openobserve.svc.cluster.local:5080
           image: guestros/tradingbot22-backend:latest
           name: tradingbot-backend
           resources:

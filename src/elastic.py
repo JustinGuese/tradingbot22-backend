@@ -20,7 +20,9 @@ MONTHDATE = datetime.now().strftime("%Y-%m")
     
         
 # openobserve support
-OO = OpenObserve("root@example.com", "Complexpass#123") # host = "http://openobserve.openobserve.svc.cluster.local:5080"
+OUSER = environ.get("OPENOBSERVE_USER", "root@example.com")
+OPASS = environ.get("OPENOBSERVE_PASS", "Complexpass#123")
+OO = OpenObserve(OUSER, OPASS, host = environ.get("OPENOBSERVE_URL", "http://localhost:5080")) # host = "http://openobserve.openobserve.svc.cluster.local:5080"
 
 def logToElastic(index: str, document: dict):
     global  OO
