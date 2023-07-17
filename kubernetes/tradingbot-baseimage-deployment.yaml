@@ -29,7 +29,7 @@ spec:
                   name: slackurl
                   # kubectl create secret generic slackurl --from-literal=slackurl=https://hooks.slack.com/services/... -n tradingbot22
             - name: PSQL_URL
-              value: postgres:postgres@postgres-service.dbstaging.svc.cluster.local:5432/postgres # i mean it's a prototype so come on
+              value: postgres:postgres@10.147.17.101:5432/postgres # i mean it's a prototype so come on
             - name: ALPACA_API_KEY
               valueFrom:
                 secretKeyRef:
