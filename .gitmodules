@@ -1,6 +1,0 @@
-[submodule "tradingbot22-tradingbots"]
-	path = tradingbot22-tradingbots
-	url = https://github.com/JustinGuese/tradingbot22-tradingbots
-[submodule "tradingbot22-basebot"]
-	path = tradingbot22-basebot
-	url = https://github.com/JustinGuese/tradingbot22-basebot
