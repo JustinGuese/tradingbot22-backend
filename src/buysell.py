@@ -114,8 +114,8 @@ async def __buy_stock(botname: str, ticker: str,
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
-    if ticker not in ALLOWED_STOCKS:
-        raise HTTPException(status_code=400, detail="Ticker not allowed")
+    # if ticker not in ALLOWED_STOCKS:
+    #     raise HTTPException(status_code=400, detail="Ticker not allowed")
     # get current price
     currentPrice = await __getCurrentPrice(ticker)
     # check if bot has enough money
@@ -183,8 +183,8 @@ async def __sell_stock(botname: str, ticker: str,
     bot = db.query(Bot).filter(Bot.name == botname).first()
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
-    if ticker not in ALLOWED_STOCKS:
-        raise HTTPException(status_code=400, detail="Ticker not allowed")
+    # if ticker not in ALLOWED_STOCKS:
+    #     raise HTTPException(status_code=400, detail="Ticker not allowed")
     # get current price
     currentPrice = await __getCurrentPrice(ticker)
     # check if bot has enough stock
