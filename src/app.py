@@ -220,11 +220,15 @@ async def __portfolioWorth(botname: str, db: Session):
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
     portfolio = bot.portfolio
+    cleanedPortfolio = dict()
     worth = 0
     for ticker,amount in portfolio.items():
         if ticker == "USD":
             worth += amount
         else:
+            # cleaned Portfolio
+            if amount != 0:
+                cleanedPortfolio[ticker] = amount
             # need to calculate short worth
             if amount == 0:
                 continue
@@ -248,6 +252,8 @@ async def __portfolioWorth(botname: str, db: Session):
                     print(e)
                     # at least assume it is a long
                     worth += await __getCurrentPrice(ticker) * abs(amount)
+    bot.portfolio = cleanedPortfolio
+    db.commit()
     return worth
 
 # get portfolio worth
