@@ -32,12 +32,12 @@ async def __buy_stock(botname: str, ticker: str,
     # check if bot has enough money
     if amountInUSD:
         amount = amount / currentPrice * (1 - COMMISSION)
-    if bot.portfolio["USD"] < amount * currentPrice:
+    if bot.portfolio.get("USD",0) < amount * currentPrice:
         raise HTTPException(status_code=400, detail="Not enough money")
     # add trade on bot
     # if amount == -1 then buy all we can
     if amount == -1:
-        amount = bot.portfolio["USD"] / currentPrice * (1 - COMMISSION)
+        amount = bot.portfolio.get("USD",0) / currentPrice * (1 - COMMISSION)
     if amount < 0:
         raise HTTPException(status_code=400, detail="Amount cant be negative")
     if short:
