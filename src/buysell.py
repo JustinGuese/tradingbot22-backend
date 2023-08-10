@@ -27,6 +27,8 @@ async def __buy_stock(botname: str, ticker: str,
     #     raise HTTPException(status_code=400, detail="Ticker not allowed")
     # get current price
     currentPrice = await __getCurrentPrice(ticker)
+    if currentPrice is None:
+        raise HTTPException(status_code=400, detail="Could not get current price")
     # check if bot has enough money
     if amountInUSD:
         amount = amount / currentPrice * (1 - COMMISSION)
@@ -94,6 +96,8 @@ async def __sell_stock(botname: str, ticker: str,
     #     raise HTTPException(status_code=400, detail="Ticker not allowed")
     # get current price
     currentPrice = await __getCurrentPrice(ticker)
+    if currentPrice is None:
+        raise HTTPException(status_code=400, detail="Could not get current price")
     # check if bot has enough stock
     if ticker not in bot.portfolio:
         raise HTTPException(status_code=404, detail="you do not own %s to sell. not in portfolio. portfolio is: " % ticker + str(bot.portfolio))
