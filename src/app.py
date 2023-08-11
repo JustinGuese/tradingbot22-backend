@@ -147,24 +147,27 @@ async def update_portfolioworth(db: Session = Depends(get_db)):
     # first get all bots
     bots = db.query(Bot).all()
     for bot in bots:
-        worth = await __portfolioWorth(bot.name, db)
-        bot.portfolioWorth = worth
-        db.commit()
-        # and try to log 2 elastic if it's up (otherwise it will just skip)
-        logToElastic("tradingbot22_portfolio_worth-" + datetime.now().strftime("%Y-%m"), {
-            "botName" : bot.name, "portfolioWorth" : worth, 
-            "@timestamp" : datetime.utcnow(),
-            "pctPerYear" : round(calculatePctPerYear(worth, bot.created_at),2),
-            "portfolio" : { k: round(v,2) for k,v in dict(bot.portfolio).items() }
-            })
-        pws = PortfolioWorths(
-            bot = bot.name,
-            timestamp = datetime.utcnow(),
-            pctPerYear = calculatePctPerYear(worth, bot.created_at),
-            worth = worth,
-            portfolio = bot.portfolio,
-        )
-        db.add(pws)
+        try:
+            worth = await __portfolioWorth(bot.name, db)
+            bot.portfolioWorth = worth
+            db.commit()
+            # and try to log 2 elastic if it's up (otherwise it will just skip)
+            logToElastic("tradingbot22_portfolio_worth-" + datetime.now().strftime("%Y-%m"), {
+                "botName" : bot.name, "portfolioWorth" : worth, 
+                "@timestamp" : datetime.utcnow(),
+                "pctPerYear" : round(calculatePctPerYear(worth, bot.created_at),2),
+                "portfolio" : { k: round(v,2) for k,v in dict(bot.portfolio).items() }
+                })
+            pws = PortfolioWorths(
+                bot = bot.name,
+                timestamp = datetime.utcnow(),
+                pctPerYear = calculatePctPerYear(worth, bot.created_at),
+                worth = worth,
+                portfolio = bot.portfolio,
+            )
+            db.add(pws)
+        except Exception as e:
+            print(f"could not determine portfolioworth of {bot.name}. Error: {e}")
     db.commit()
         
 @app.get("/update/earningeffects")
