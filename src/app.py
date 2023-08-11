@@ -225,11 +225,9 @@ async def __portfolioWorth(botname: str, db: Session):
     for ticker,amount in portfolio.items():
         if ticker == "USD":
             worth += amount
+            cleanedPortfolio["USD"] = amount
         else:
             # cleaned Portfolio
-            if ticker == "USD" and amount == 0:
-                # still insert usd
-                cleanedPortfolio["USD"] = 0.
             if amount != 0:
                 cleanedPortfolio[ticker] = amount
             # need to calculate short worth
