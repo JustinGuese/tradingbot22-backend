@@ -253,6 +253,8 @@ async def __portfolioWorth(botname: str, db: Session):
                     print(e)
                     # at least assume it is a long
                     worth += await __getCurrentPrice(ticker) * abs(amount)
+    if "USD" not in cleanedPortfolio:
+        cleanedPortfolio["USD"] = 0
     bot.portfolio = cleanedPortfolio
     db.commit()
     return worth
