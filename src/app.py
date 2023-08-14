@@ -214,6 +214,10 @@ async def get_bots_byWorth(request: Request, db: Session = Depends(get_db)):
 @app.get("/bot/{botname}", response_model=BotPD, tags = ["account"])
 async def get_bot(botname: str, request: Request, db: Session = Depends(get_db)):
     bot = db.query(Bot).filter(Bot.name == botname).first()
+    # clean out 0 values of portfolio, add USD = 0 if not in there
+    bot.portfolio = { k: v for k,v in dict(bot.portfolio).items() if v != 0 }
+    if "USD" not in bot.portfolio:
+        bot.portfolio["USD"] = 0
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
     return bot
