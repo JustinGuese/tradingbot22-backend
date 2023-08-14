@@ -218,6 +218,8 @@ async def get_bot(botname: str, request: Request, db: Session = Depends(get_db))
     bot.portfolio = { k: v for k,v in dict(bot.portfolio).items() if v != 0 }
     if "USD" not in bot.portfolio:
         bot.portfolio["USD"] = 0
+    db.commit()
+    db.refresh(bot)
     if bot is None:
         raise HTTPException(status_code=404, detail="Bot not found")
     return bot
