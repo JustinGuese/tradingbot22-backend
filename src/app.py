@@ -8,6 +8,7 @@ from buysell import router as buysell_router
 from logger import logger
 from portfolio import router as portfolio_router
 from pricing import router as pricing_router
+from ratings import router as ratings_router
 from update import router as update_router
 
 app = FastAPI(title="tradingbot api 2.0")
@@ -16,6 +17,7 @@ app.include_router(buysell_router, prefix="/buysell", tags=["buysell"])
 app.include_router(portfolio_router, prefix="/portfolio", tags=["portfolio"])
 app.include_router(pricing_router, prefix="/pricing", tags=["pricing"])
 app.include_router(update_router, prefix="/update", tags=["update"])
+app.include_router(ratings_router, prefix="/ratings", tags=["ratings"])
 
 
 @app.exception_handler(Exception)

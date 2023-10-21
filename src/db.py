@@ -108,13 +108,9 @@ class EarningDates(Base):
     __tablename__ = "earning_dates"
     timestamp = Column(DateTime, primary_key=True, index=True)
     ticker = Column(String, primary_key=True, index=True)
-    earnings_avg = Column(Float)
-    earnings_low = Column(Float)
-    earnings_high = Column(Float)
-    # rev
-    revenue_avg = Column(BigInteger)  # might need bigint
-    revenue_low = Column(BigInteger)
-    revenue_high = Column(BigInteger)
+    estimate = Column(Float)
+    reported = Column(Float)
+    surprise_pct = Column(Float)
 
 
 class QuarterlyFinancials(Base):
