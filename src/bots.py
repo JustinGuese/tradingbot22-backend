@@ -16,18 +16,23 @@ def getBots(db: Session = Depends(get_db)):
     return allBots
 
 
+def __getDBBot(bot_name: str, db: Session) -> Bot:
+    bot = db.query(Bot).filter(Bot.name == bot_name).first()
+    return bot
+
+
 @router.get("/{bot_name}", response_model=BotPD)
 def getBot(bot_name: str, db: Session = Depends(get_db)):
-    bot = db.query(Bot).filter(Bot.name == bot_name).first()
+    bot = __getDBBot(bot_name, db)
     if bot is None:
-        logger.warning(f"Bot {bot_name} not found")
+        logger.warning(f"Bot {bot_name} not found in get route")
         raise HTTPException(status_code=404, detail="Bot not found")
     return BotPD.model_validate(bot)
 
 
 @router.put("/")
 def updateBot(bot: BotCreatePD, db: Session = Depends(get_db)):
-    dbbot = db.query(Bot).filter(Bot.name == bot.name).first()
+    dbbot = __getDBBot(bot.name, db)
     if dbbot is None:
         # create new bot
         bot = Bot(**bot.model_dump())
@@ -45,7 +50,7 @@ def updateBot(bot: BotCreatePD, db: Session = Depends(get_db)):
 
 @router.delete("/{bot_name}")
 def deleteBot(bot_name: str, db: Session = Depends(get_db)):
-    bot = db.query(Bot).filter(Bot.name == bot_name).first()
+    bot = __getDBBot(bot_name, db)
     if bot is None:
         logger.warning(f"Bot {bot_name} not found in delete route")
         raise HTTPException(status_code=404, detail="Bot not found")

@@ -24,8 +24,3 @@ app.include_router(ratings_router, prefix="/ratings", tags=["ratings"])
 async def handle_normal_excp(request, exception):
     logger.error(traceback.format_exc())
     raise exception
-
-
-@app.get("/")
-def root():
-    return {"message": "Hello World"}

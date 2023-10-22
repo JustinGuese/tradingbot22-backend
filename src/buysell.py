@@ -3,7 +3,7 @@ from typing import Dict
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from bots import getBot
+from bots import __getDBBot
 from db import Trade, get_db
 from logger import logger
 from pricing import getCurrentPrice
@@ -17,23 +17,25 @@ COMMISSION = 0.0015
 def buy(
     bot_name: str,
     ticker: str,
-    amount: float,
+    amount: float = 0,  # 0 means by default buy for all the usd
     amountInUSD: bool = True,
     db: Session = Depends(get_db),
 ) -> dict:
-    bot = getBot(bot_name, db)
+    bot = __getDBBot(bot_name, db)
     portfolio = bot.portfolio
     cash = portfolio.get("USD", 0)
     crntPrice = getCurrentPrice(ticker)
     if amount < 0:
         logger.warning("negative amount passed to buy by bot " + bot_name)
         raise HTTPException(status_code=400, detail="shorting not yet implemented")
+    if amount == 0:
+        # means by default buy for all the usd
+        amount = cash
     if not amountInUSD:
         amount *= crntPrice
 
-    cost = amount * (1 + COMMISSION)
-    howMany = amount / crntPrice
-    if cash < cost:
+    howMany = (amount * (1 - COMMISSION)) / crntPrice
+    if cash < amount:
         logger.warning(
             f"bot {bot_name} tried to buy {amount} {ticker} but only had {cash} USD"
         )
@@ -45,7 +47,7 @@ def buy(
         portfolio[ticker] += howMany
     else:
         portfolio[ticker] = howMany
-    portfolio["USD"] -= cost
+    portfolio["USD"] -= amount
     bot.portfolio = portfolio
     db.commit()
 
@@ -58,7 +60,7 @@ def buy(
     )
     db.add(trade)
     db.commit()
-    logger.info(f"bot {bot_name} bought {howMany} {ticker} for {cost} USD")
+    logger.info(f"bot {bot_name} bought {howMany} {ticker} for {amount} USD")
     return portfolio
 
 
@@ -66,11 +68,11 @@ def buy(
 def sell(
     bot_name: str,
     ticker: str,
-    amount: float,
+    amount: float = 0,  # 0 means by default sell all the ticker
     amountInUSD: bool = True,
     db: Session = Depends(get_db),
 ) -> dict:
-    bot = getBot(bot_name, db)
+    bot = __getDBBot(bot_name, db)
     portfolio = bot.portfolio
     crntPrice = getCurrentPrice(ticker)
     if amount < 0:
@@ -78,6 +80,18 @@ def sell(
         raise HTTPException(
             status_code=400, detail="amount for sell must always be positive"
         )
+    if amount == 0:
+        # means by default sell all the ticker
+        amountInUSD = True
+        amount = portfolio.get(ticker) * crntPrice
+        if amount is None:
+            raise HTTPException(
+                status_code=400,
+                detail="you do not have any "
+                + ticker
+                + " to sell. portfolio: "
+                + str(portfolio),
+            )
     if not amountInUSD:
         amount *= crntPrice
 

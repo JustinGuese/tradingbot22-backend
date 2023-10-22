@@ -23,13 +23,16 @@ def getCurrentPrice(ticker: str) -> float:
             refresh = False
     if refresh:
         try:
-            ticker = yf.Ticker(ticker)
+            yftick = yf.Ticker(ticker)
             PRICE_MEMORY[ticker] = {
-                "price": ticker.history(period="1d")["Close"].iloc[0],
+                "price": yftick.history(period="1d")["Close"].iloc[0],
                 "expiry": datetime.utcnow() + timedelta(minutes=PRICE_CACHE_MINS),
             }
         except Exception as e:
             logger.error("could not get price data for " + ticker)
+            raise HTTPException(
+                status_code=404, detail="could not get price data for ticekr" + ticker
+            )
     return PRICE_MEMORY[ticker]["price"]
 
 
