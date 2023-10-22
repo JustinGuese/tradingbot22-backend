@@ -1,10 +1,11 @@
+from datetime import datetime
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from bots import getBot
-from db import Bot, get_db
+from db import Bot, PortfolioWorths, get_db
 from logger import logger
 from portfolio import getPortfolioWorth
 from pricing import getCurrentPrice
@@ -18,7 +19,16 @@ def updatePortfolioWorths(db: Session = Depends(get_db)):
     bots = db.query(Bot).all()
     for bot in bots:
         # getPortfolioWorth automatically commits update to db
-        _ = getPortfolioWorth(bot.name, db)
+        worth = getPortfolioWorth(bot.name, db)
+        # portfolioworth object 2 db
+        pwobj = PortfolioWorths(
+            bot=bot.name,
+            timestamp=datetime.utcnow(),
+            worth=worth,
+            portfolio=bot.portfolio,
+        )
+        db.add(pwobj)
+    db.commit()
     return {"message": "success"}
 
 

@@ -76,7 +76,7 @@ class BotCreatePD(BaseModel):
 class BotPD(BotCreatePD):
     model_config = ConfigDict(from_attributes=True)
     start_money: float = 10000.0
-    portfolioWorth: float = 10000.0
+    portfolio_worth: float = 10000.0
     created_at: datetime = datetime.utcnow()
     updated_at: datetime = datetime.utcnow()
 
@@ -146,7 +146,6 @@ class PortfolioWorths(Base):
     __tablename__ = "portfolio_worths"
     bot = Column(String, ForeignKey("bots.name", ondelete="CASCADE"))
     timestamp = Column(DateTime, primary_key=True, index=True, default=datetime.utcnow)
-    pctPerYear = Column(Float)
     portfolio = Column(MutableDict.as_mutable(JSON))
     worth = Column(Float)
 
