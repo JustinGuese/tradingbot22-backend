@@ -22,7 +22,7 @@ def getPortfolioSortedByBots(withPortfolio: bool = True, db: Session = Depends(g
     bots = db.query(Bot).all()
     rettich = []
     for bot in bots:
-        daysActive = (bot.created_at - datetime.utcnow()).days
+        daysActive = (datetime.utcnow() - bot.created_at).days
         ret = bot.portfolio_worth - bot.start_money
         if daysActive > 0:
             ret /= daysActive
