@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -18,13 +19,25 @@ def getPortfolio(bot_name: str, db: Session = Depends(get_db)):
 
 @router.get("/allBotsByWorth/")
 def getPortfolioSortedByBots(withPortfolio: bool = True, db: Session = Depends(get_db)):
-    bots = db.query(Bot.name, Bot.portfolio_worth, Bot.portfolio).all()
-    if not withPortfolio:
-        bots = [(bot.name, bot.portfolio_worth) for bot in bots]
-    else:
-        bots = [(bot.name, bot.portfolio_worth, bot.portfolio) for bot in bots]
-    bots = sorted(bots, key=lambda x: x[1], reverse=True)
-    return bots
+    bots = db.query(Bot).all()
+    rettich = []
+    for bot in bots:
+        daysActive = (bot.created_at - datetime.utcnow()).days
+        ret = bot.portfolio_worth - bot.start_money
+        if daysActive > 0:
+            ret /= daysActive
+            ret *= 365
+        else:
+            ret = 0
+        if withPortfolio:
+            rettich.append(
+                (bot.name, bot.portfolio_worth, round(ret, 2), bot.portfolio)
+            )
+        else:
+            rettich.append((bot.name, bot.portfolio_worth, round(ret, 2)))
+
+    rettich = sorted(rettich, key=lambda x: x[1], reverse=True)
+    return rettich
 
 
 @router.get("/worth/{bot_name}")
