@@ -25,7 +25,7 @@ def getCurrentPrice(ticker: str) -> float:
         try:
             ticker = yf.Ticker(ticker)
             PRICE_MEMORY[ticker] = {
-                "price": ticker.history(period="1d")["Close"][0],
+                "price": ticker.history(period="1d")["Close"].iloc[0],
                 "expiry": datetime.utcnow() + timedelta(minutes=PRICE_CACHE_MINS),
             }
         except Exception as e:
