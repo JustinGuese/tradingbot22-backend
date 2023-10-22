@@ -16,10 +16,11 @@ def getPortfolio(bot_name: str, db: Session = Depends(get_db)):
     return getBot(bot_name, db).portfolio
 
 
-@router.get("/allBotsByWorth")
-def getBotsByWorth(db: Session = Depends(get_db)):
-    bots = db.query(Bot.name, Bot.portfolio_worth).all()
-    bots.sort(key=lambda bot: bot.portfolio_worth, reverse=True)
+@router.get("/allBotsByWorth/")
+def getPortfolioSortedByBots(db: Session = Depends(get_db)):
+    bots = db.query(Bot.name, Bot.portfolio_worth, Bot.portfolio).all()
+    bots = [(bot.name, bot.portfolio_worth, bot.portfolio) for bot in bots]
+    bots = sorted(bots, key=lambda x: x[1], reverse=True)
     return bots
 
 
@@ -31,13 +32,17 @@ def getPortfolioWorth(bot_name: str, db: Session = Depends(get_db)) -> float:
     portfolio = bot.portfolio
 
     total = 0
+    cleanedPortfolio = {}
     for ticker, amount in portfolio.items():
         if ticker == "USD":
             total += amount
         else:
             # TODO: add shorting support -> negative amount
             total += abs(amount) * getCurrentPrice(ticker)
+        if amount != 0:
+            cleanedPortfolio[ticker] = amount
     total = round(total, 2)
+    bot.portfolio = cleanedPortfolio
     bot.portfolio_worth = total
     db.commit()
     return total
