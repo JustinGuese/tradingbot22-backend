@@ -17,9 +17,12 @@ def getPortfolio(bot_name: str, db: Session = Depends(get_db)):
 
 
 @router.get("/allBotsByWorth/")
-def getPortfolioSortedByBots(db: Session = Depends(get_db)):
+def getPortfolioSortedByBots(withPortfolio: bool = True, db: Session = Depends(get_db)):
     bots = db.query(Bot.name, Bot.portfolio_worth, Bot.portfolio).all()
-    bots = [(bot.name, bot.portfolio_worth, bot.portfolio) for bot in bots]
+    if not withPortfolio:
+        bots = [(bot.name, bot.portfolio_worth) for bot in bots]
+    else:
+        bots = [(bot.name, bot.portfolio_worth, bot.portfolio) for bot in bots]
     bots = sorted(bots, key=lambda x: x[1], reverse=True)
     return bots
 
