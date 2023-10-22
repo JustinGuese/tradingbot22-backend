@@ -28,7 +28,8 @@ def getPortfolioWorth(bot_name: str, db: Session = Depends(get_db)) -> float:
         if ticker == "USD":
             total += amount
         else:
-            total += amount * getCurrentPrice(ticker)
+            # TODO: add shorting support -> negative amount
+            total += abs(amount) * getCurrentPrice(ticker)
     bot.portfolio_worth = total
     db.commit()
     return total
