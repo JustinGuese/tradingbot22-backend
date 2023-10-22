@@ -16,6 +16,13 @@ def getPortfolio(bot_name: str, db: Session = Depends(get_db)):
     return getBot(bot_name, db).portfolio
 
 
+@router.get("/allBotsByWorth")
+def getBotsByWorth(db: Session = Depends(get_db)):
+    bots = db.query(Bot.name, Bot.portfolio_worth).all()
+    bots.sort(key=lambda bot: bot.portfolio_worth, reverse=True)
+    return bots
+
+
 @router.get("/worth/{bot_name}")
 def getPortfolioWorth(bot_name: str, db: Session = Depends(get_db)) -> float:
     bot = db.query(Bot).filter(Bot.name == bot_name).first()
