@@ -53,8 +53,12 @@ def getPortfolioWorth(bot_name: str, db: Session = Depends(get_db)) -> float:
         if ticker == "USD":
             total += amount
         else:
-            # TODO: add shorting support -> negative amount
-            total += abs(amount) * getCurrentPrice(ticker)
+            try:
+                # TODO: add shorting support -> negative amount
+                total += abs(amount) * getCurrentPrice(ticker)
+            except Exception as e:
+                logger.error(e)
+                # but continue
         if amount != 0:
             cleanedPortfolio[ticker] = amount
     total = round(total, 2)
