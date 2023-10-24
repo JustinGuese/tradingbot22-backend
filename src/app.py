@@ -3,6 +3,7 @@ import traceback
 from fastapi import Depends, FastAPI, HTTPException, Request
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from alphavantage import router as alphavantage_router
 from bots import router as bots_router
 from buysell import router as buysell_router
 from logger import logger
@@ -18,6 +19,9 @@ app.include_router(portfolio_router, prefix="/portfolio", tags=["portfolio"])
 app.include_router(pricing_router, prefix="/pricing", tags=["pricing"])
 app.include_router(update_router, prefix="/update", tags=["update"])
 app.include_router(ratings_router, prefix="/ratings", tags=["ratings"])
+app.include_router(
+    alphavantage_router, prefix="/update/alphavantage", tags=["alphavantage"]
+)
 
 
 @app.exception_handler(Exception)

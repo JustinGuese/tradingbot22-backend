@@ -1,16 +1,25 @@
 from datetime import date, datetime
 from os import environ
+from typing import List
 
 import requests
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from db import (
     AlphaGainerLoserType,
     AlphaGainersLosers,
     AlphaSentiment,
     AlphaSentimentArticle,
+    Bot,
+    BotCreatePD,
+    BotPD,
     SentimentCategory,
-    db,
+    get_db,
 )
+from logger import logger
+
+router = APIRouter()
 
 BASEURL = "https://www.alphavantage.co/query/"
 
@@ -19,7 +28,7 @@ def alphaPctConv(pctstring):
     return round(float(pctstring.replace("%", "")) / 100, 2)
 
 
-def getGainersLosers():
+def getGainersLosers(db):
     url = BASEURL + "?function=TOP_GAINERS_LOSERS&apikey=" + environ["ALPHAVANTAGE_KEY"]
 
     response = requests.request("GET", url)
@@ -87,7 +96,7 @@ def ticker2YfinanceFormat(tickerstr: str) -> str:
     return tickerstr
 
 
-def getSentimenAndNews():
+def getSentimenAndNews(db):
     # first start with general news
     url = (
         BASEURL
@@ -146,5 +155,13 @@ def getSentimenAndNews():
         db.commit()
 
 
-getSentimenAndNews()
-# getGainersLosers()
+@router.get("/")
+def getAlphaVantageData(db: Session = Depends(get_db)):
+    try:
+        getSentimenAndNews(db)
+    except Exception as e:
+        logger.exception("could not get sentiment from alphavantage: " + str(e))
+    try:
+        getGainersLosers(db)
+    except Exception as e:
+        logger.exception("could not get gainers/losers from alphavantage: " + str(e))
