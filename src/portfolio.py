@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from bots import getBot
-from db import Bot, get_db
+from db import Bot, PortfolioWorths, get_db
 from logger import logger
 from pricing import getCurrentPrice
 
@@ -18,8 +18,13 @@ def getPortfolio(bot_name: str, db: Session = Depends(get_db)):
 
 
 @router.get("/allBotsByWorth/")
-def getPortfolioSortedByBots(withPortfolio: bool = True, db: Session = Depends(get_db)):
-    bots = db.query(Bot).all()
+def getPortfolioSortedByBots(
+    withPortfolio: bool = False, db: Session = Depends(get_db)
+):
+    bots = db.query(PortfolioWorths).all()
+    latestUpdate = (
+        db.query(PortfolioWorths.timestamp).order_by(PortfolioWorths.id.desc()).first()
+    )
     rettich = []
     for bot in bots:
         daysActive = (datetime.utcnow() - bot.created_at).days
@@ -37,7 +42,11 @@ def getPortfolioSortedByBots(withPortfolio: bool = True, db: Session = Depends(g
             rettich.append((bot.name, bot.portfolio_worth, round(ret, 2)))
 
     rettich = sorted(rettich, key=lambda x: x[1], reverse=True)
-    return rettich
+    return {
+        "latestUpdate": latestUpdate,
+        "isRecent": latestUpdate > datetime.utcnow() - timedelta(days=1),
+        "bots": rettich,
+    }
 
 
 @router.get("/worth/{bot_name}")
