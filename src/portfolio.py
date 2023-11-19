@@ -46,7 +46,6 @@ def getPortfolioSortedByBots(
     rettich = sorted(rettich, key=lambda x: x[1], reverse=True)
     return {
         "latestUpdate": latestUpdate,
-        "isRecent": latestUpdate > datetime.utcnow() - timedelta(days=1),
         "bots": rettich,
     }
 

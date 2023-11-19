@@ -13,8 +13,8 @@
       "args": ["app:app", "--reload"],
       "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PSQL_URL": "postgres:postgres@localhost:5432/postgres"
-      },
+        // "PSQL_URL": "postgres:postgres@localhost:5432/postgres"
+            },
       "jinja": true,
       "justMyCode": true
     },
