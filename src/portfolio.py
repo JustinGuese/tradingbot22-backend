@@ -23,7 +23,9 @@ def getPortfolioSortedByBots(
 ):
     bots = db.query(PortfolioWorths).all()
     latestUpdate = (
-        db.query(PortfolioWorths.timestamp).order_by(PortfolioWorths.id.desc()).first()
+        db.query(PortfolioWorths.timestamp)
+        .order_by(PortfolioWorths.timestamp.desc())
+        .first()
     )
     rettich = []
     for bot in bots:
