@@ -45,7 +45,7 @@ def getPortfolioSortedByBots(
 
     rettich = sorted(rettich, key=lambda x: x[1], reverse=True)
     return {
-        "latestUpdate": latestUpdate,
+        # "latestUpdate": latestUpdate, # cursed
         "bots": rettich,
     }
 
