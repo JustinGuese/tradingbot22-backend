@@ -21,7 +21,7 @@ def getPortfolio(bot_name: str, db: Session = Depends(get_db)):
 def getPortfolioSortedByBots(
     withPortfolio: bool = False, db: Session = Depends(get_db)
 ):
-    bots = db.query(PortfolioWorths).all()
+    bots = db.query(Bot).all()
     latestUpdate = (
         db.query(PortfolioWorths.timestamp)
         .order_by(PortfolioWorths.timestamp.desc())
