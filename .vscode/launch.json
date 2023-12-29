@@ -13,7 +13,7 @@
       "args": ["app:app", "--reload"],
       "envFile": "${workspaceFolder}/.env",
       "env": {
-        // "PSQL_URL": "postgres:postgres@localhost:5432/postgres"
+        "PSQL_URL": "postgres:postgres@localhost:5432/tradingbot"
             },
       "jinja": true,
       "justMyCode": true
@@ -26,7 +26,7 @@
         "console": "integratedTerminal",
         "envFile": "${workspaceFolder}/.env",
         "env": {
-            "PSQL_URL": "postgres:postgres@localhost:5432/postgres"
+            // "PSQL_URL": "postgres:postgres@localhost:5432/postgres"
         },
         "cwd" : "${workspaceFolder}/longtime-services/",
         "justMyCode": true

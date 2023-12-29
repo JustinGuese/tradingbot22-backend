@@ -22,11 +22,11 @@ def getPortfolioSortedByBots(
     withPortfolio: bool = False, db: Session = Depends(get_db)
 ):
     bots = db.query(Bot).all()
-    latestUpdate = (
-        db.query(PortfolioWorths.timestamp)
-        .order_by(PortfolioWorths.timestamp.desc())
-        .first()
-    )
+    # latestUpdate = (
+    #     db.query(PortfolioWorths.timestamp)
+    #     .order_by(PortfolioWorths.timestamp.desc())
+    #     .first()
+    # )
     rettich = []
     for bot in bots:
         daysActive = (datetime.utcnow() - bot.created_at).days
@@ -36,14 +36,32 @@ def getPortfolioSortedByBots(
             ret *= 365
         else:
             ret = 0
-        if withPortfolio:
-            rettich.append(
-                (bot.name, bot.portfolio_worth, round(ret, 2), bot.portfolio)
+        # calculate pct per year
+        pctPerYear = ret / bot.start_money * 100
+        rettich.append(
+            (
+                bot.name,
+                bot.portfolio_worth,
+                round(ret, 2),
+                daysActive,
+                int(pctPerYear),
+                None if not withPortfolio else bot.portfolio,
             )
-        else:
-            rettich.append((bot.name, bot.portfolio_worth, round(ret, 2)))
+        )
 
     rettich = sorted(rettich, key=lambda x: x[1], reverse=True)
+    # make more readable
+    rettich = [
+        {
+            "botname": name,
+            "worthUSD": worth,
+            "returnPerYearUSD": ret,
+            "daysActive": daysActive,
+            "pctPerYear": pctPerYear,
+            "portfolio": portfolio,
+        }
+        for name, worth, ret, daysActive, pctPerYear, portfolio in rettich
+    ]
     return {
         # "latestUpdate": latestUpdate, # cursed
         "bots": rettich,
