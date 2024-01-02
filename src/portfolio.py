@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,9 +18,16 @@ def getPortfolio(bot_name: str, db: Session = Depends(get_db)):
     return getBot(bot_name, db).portfolio
 
 
+class SortOptions(str, Enum):
+    worth = "worth"
+    returnPerYear = "returnPerYear"
+
+
 @router.get("/allBotsByWorth/")
 def getPortfolioSortedByBots(
-    withPortfolio: bool = False, db: Session = Depends(get_db)
+    withPortfolio: bool = False,
+    sortby: SortOptions = SortOptions.returnPerYear,
+    db: Session = Depends(get_db),
 ):
     bots = db.query(Bot).all()
     # latestUpdate = (
@@ -48,8 +56,15 @@ def getPortfolioSortedByBots(
                 None if not withPortfolio else bot.portfolio,
             )
         )
+    # sort by
+    if sortby == SortOptions.worth:
+        sortby = 1
+    elif sortby == SortOptions.returnPerYear:
+        sortby = 2
+    else:
+        raise ValueError("sortby must be one of: ", str(SortOptions))
 
-    rettich = sorted(rettich, key=lambda x: x[1], reverse=True)
+    rettich = sorted(rettich, key=lambda x: x[sortby], reverse=True)
     # make more readable
     rettich = [
         {
