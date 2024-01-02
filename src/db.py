@@ -58,6 +58,7 @@ def get_db():
 class Bot(Base):
     __tablename__ = "bots"
     name = Column(String, unique=True, primary_key=True, index=True)
+    nicename = Column(String, default=None, nullable=True)
     description = Column(String, default="no description yet")
     start_money = Column(Float, default=10000)
     portfolio = Column(MutableDict.as_mutable(JSON), default=lambda: {"USD": 10000})
@@ -71,6 +72,7 @@ class BotCreatePD(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
+    nicename: str = None
     description: str = "no description yet"
     portfolio: dict = {"USD": 10000}
     live: bool = False
