@@ -54,7 +54,7 @@ def buy(
     trade = Trade(
         bot=bot_name,
         ticker=ticker,
-        quantity=amount,
+        quantity=howMany,
         price=crntPrice,
         buy=True,
     )
@@ -123,7 +123,7 @@ def sell(
     trade = Trade(
         bot=bot_name,
         ticker=ticker,
-        quantity=amount,
+        quantity=howMany,
         price=crntPrice,
         buy=False,
     )
