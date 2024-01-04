@@ -12,6 +12,9 @@ router = APIRouter()
 @router.get("/", response_model=List[BotPD])
 def getBots(db: Session = Depends(get_db)):
     allBots = db.query(Bot).all()
+    for i in range(len(allBots)):
+        if allBots[i].nicename is None:
+            allBots[i].nicename = allBots[i].name
     allBots = [BotPD.model_validate(bot) for bot in allBots]
     return allBots
 
@@ -27,6 +30,8 @@ def getBot(bot_name: str, db: Session = Depends(get_db)):
     if bot is None:
         logger.warning(f"Bot {bot_name} not found in get route")
         raise HTTPException(status_code=404, detail="Bot not found")
+    if bot.nicename is None:
+        bot.nicename = bot.name
     return BotPD.model_validate(bot)
 
 
