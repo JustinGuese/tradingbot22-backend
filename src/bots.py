@@ -35,6 +35,8 @@ def updateBot(bot: BotCreatePD, db: Session = Depends(get_db)):
     dbbot = __getDBBot(bot.name, db)
     if dbbot is None:
         # create new bot
+        if bot.nicename is "none":
+            bot.nicename = None
         bot = Bot(**bot.model_dump())
         db.add(bot)
     else:
@@ -43,6 +45,9 @@ def updateBot(bot: BotCreatePD, db: Session = Depends(get_db)):
         dbbot.portfolio = bot.portfolio
         dbbot.live = bot.live
         dbbot.name = bot.name
+        if bot.nicename is "none":
+            bot.nicename = None
+        dbbot.nicename = bot.nicename
         db.merge(dbbot)
     db.commit()
     return BotPD.model_validate(bot)

@@ -72,7 +72,7 @@ class BotCreatePD(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
-    nicename: str = None
+    nicename: str = "none"
     description: str = "no description yet"
     portfolio: dict = {"USD": 10000}
     live: bool = False

@@ -12,9 +12,9 @@
       "cwd": "${workspaceFolder}/src/",
       "args": ["app:app", "--reload"],
       "envFile": "${workspaceFolder}/.env",
-      "env": {
-        "PSQL_URL": "postgres:postgres@localhost:5432/tradingbot"
-            },
+      // "env": {
+      //   "PSQL_URL": "postgres:postgres@localhost:5432/tradingbot"
+      //       },
       "jinja": true,
       "justMyCode": true
     },
