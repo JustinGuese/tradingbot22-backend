@@ -200,6 +200,9 @@ class AlphaSentimentArticle(Base):
     summary = Column(String)
     category = Column(String)
     source = Column(String)
+    ai_summary = Column(String, default=None, nullable=True)
+    ai_title = Column(String, default=None, nullable=True)
+    ai_url = Column(String, default=None, nullable=True)
     tickers: Mapped[List["AlphaSentiment"]] = relationship()
 
 
