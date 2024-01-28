@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tradingbot-backend
+  namespace: tradingbot
+  labels:
+    app: tradingbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tradingbot
+  template:
+    metadata:
+      labels:
+        app: tradingbot
+    spec:
+      containers:
+        - name: tradingbot
+          image: registry.kube-system.svc.cluster.local:5000/tradingbot-backend:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "5Mi"
+              cpu: "5m"
+          env:
+            # psql connection
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: psql-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: psql-secret
+                  key: password
+            - name: POSTGRES_DB
+              value: tradingbot
+            - name: POSTGRES_HOST
+              value: psql-service
+            - name: POSTGRES_PORT
+              value: "5432"
+            # tradingbot settings
+            - name: ALPHAVANTAGE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tradingbot-secret
+                  key: alphavantage_key

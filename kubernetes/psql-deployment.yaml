@@ -1,0 +1,64 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: psql-deployment
+  namespace: tradingbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: psql
+  template:
+    metadata:
+      labels:
+        app: psql
+    spec:
+      containers:
+        - name: psql
+          image: postgres:14-alpine
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: psql-data
+              mountPath: /var/lib/postgresql/data/
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: psql-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: psql-secret
+                  key: password
+            - name: POSTGRES_DB
+              value: tradingbot
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "5Mi"
+              cpu: "5m"
+      securityContext:
+        fsGroup: 70  # Add fsGroup security context
+      volumes:
+        - name: psql-data
+          hostPath:
+            path: /mnt/hdd/pgtradingbot/
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: psql-service
+  namespace: tradingbot
+spec:
+  type: ClusterIP
+  selector:
+    app: psql
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

@@ -24,10 +24,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column, relationship, sessionmaker
 from sqlalchemy.types import BigInteger
 
-DATABASE_URL = "postgresql+psycopg2://" + environ.get(
-    "PSQL_URL", "postgres:postgres@localhost:5432/postgres"
-)  # user:password@postgresserver/db
-
+DATABASE_URL = f"postgresql+psycopg2://{environ['POSTGRES_USER']}:{environ['POSTGRES_PASSWORD']}@{environ['POSTGRES_HOST']}/{environ['POSTGRES_DB']}"
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
@@ -203,6 +200,9 @@ class AlphaSentimentArticle(Base):
     ai_summary = Column(String, default=None, nullable=True)
     ai_title = Column(String, default=None, nullable=True)
     ai_url = Column(String, default=None, nullable=True)
+    ai_ticker_reasons = Column(
+        MutableDict.as_mutable(JSON), default=None, nullable=True
+    )
     tickers: Mapped[List["AlphaSentiment"]] = relationship()
 
 
