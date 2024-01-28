@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: cicd-tradingbot-backend-
+spec:
+  pipelineRef:
+    name: clone-read
+  podTemplate:
+    securityContext:
+      fsGroup: 65532
+  workspaces:
+  - name: shared-data
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  - name: git-credentials
+    secret:
+      secretName: git-credentials
+  params:
+  - name: repo-url
+    value: git@github.com:JustinGuese/tradingbot22-backend.git
+  - name: image-reference
+    value: registry.kube-system.svc.cluster.local:5000/tradingbot-backend:latest
+  - name: k8s-deployment
+    value: tradingbot-backend
+  - name: k8s-namespace
+    value: tradingbot
