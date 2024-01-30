@@ -15,7 +15,7 @@ spec:
       labels:
         app: tradingbot
     spec:
-      containers:
+      containers: # 
         - name: tradingbot
           image: registry.kube-system.svc.cluster.local:5000/tradingbot22-backend:latest
           ports:
