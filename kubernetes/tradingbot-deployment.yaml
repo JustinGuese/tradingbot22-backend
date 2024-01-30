@@ -15,9 +15,11 @@ spec:
       labels:
         app: tradingbot
     spec:
+      imagePullSecrets:
+        - name: regcred
       containers: # 
         - name: tradingbot
-          image: registry.kube-system.svc.cluster.local:5000/tradingbot22-backend:latest
+          image: registry.k8s.datafortress.cloud/tradingbot22-backend:latest
           ports:
             - containerPort: 8000
           resources:
@@ -51,3 +53,17 @@ spec:
                 secretKeyRef:
                   name: tradingbot-secret
                   key: alphavantage_key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tradingbot-backend
+  namespace: tradingbot
+spec:
+  type: ClusterIP
+  selector:
+    app: tradingbot
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
