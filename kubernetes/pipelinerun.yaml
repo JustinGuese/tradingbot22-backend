@@ -28,4 +28,4 @@ spec:
   - name: k8s-deployment
     value: tradingbot-backend
   - name: k8s-namespace
-    value: tradingbot # s
+    value: tradingbot # ss
