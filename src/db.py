@@ -24,7 +24,6 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column, relationship, sessionmaker
 from sqlalchemy.types import BigInteger
 
-#
 DATABASE_URL = f"postgresql+psycopg2://{environ['POSTGRES_USER']}:{environ['POSTGRES_PASSWORD']}@{environ['POSTGRES_HOST']}/{environ['POSTGRES_DB']}"
 engine = create_engine(
     DATABASE_URL,
