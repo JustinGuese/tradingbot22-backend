@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: tradingbot
-          image: registry.kube-system.svc.cluster.local:5000/tradingbot-backend:latest
+          image: registry.kube-system.svc.cluster.local:5000/tradingbot22-backend:latest
           ports:
             - containerPort: 8000
           resources:
