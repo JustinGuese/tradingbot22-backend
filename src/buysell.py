@@ -78,7 +78,8 @@ def sell(
     if amount < 0:
         logger.warning("negative amount passed to sell by bot " + bot_name)
         raise HTTPException(
-            status_code=400, detail="amount for sell must always be positive"
+            status_code=400,
+            detail="amount for sell must always be positive. you passed " + str(amount),
         )
     if amount == 0:
         # means by default sell all the ticker
