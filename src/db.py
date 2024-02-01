@@ -195,6 +195,7 @@ class AlphaSentimentArticle(Base):
     author = Column(String, index=True)
     title = Column(String, index=True)
     summary = Column(String)
+    url = Column(String)
     category = Column(String)
     source = Column(String)
     ai_summary = Column(String, default=None, nullable=True)

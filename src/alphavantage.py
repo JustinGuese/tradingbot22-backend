@@ -124,6 +124,7 @@ def getSentimenAndNews(db):
             author=article["authors"][0] if len(article["authors"]) > 0 else None,
             title=article["title"],
             summary=article["summary"],
+            url=article["url"],
             category=article["category_within_source"]
             if article["category_within_source"] != "n/a"
             else None,
