@@ -20,6 +20,7 @@ spec:
       containers: # 
         - name: tradingbot
           image: registry.k8s.datafortress.cloud/tradingbot22-backend:latest
+          imagePullPolicy: Always # Add this line
           ports:
             - containerPort: 8000
           resources:
