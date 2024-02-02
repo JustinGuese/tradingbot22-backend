@@ -23,6 +23,8 @@ def buy(
 ) -> dict:
     bot = __getDBBot(bot_name, db)
     portfolio = bot.portfolio
+    if "USD" not in portfolio:
+        portfolio["USD"] = 0
     cash = portfolio.get("USD", 0)
     crntPrice = getCurrentPrice(ticker)
     if amount < 0:
@@ -74,6 +76,8 @@ def sell(
 ) -> dict:
     bot = __getDBBot(bot_name, db)
     portfolio = bot.portfolio
+    if "USD" not in portfolio:
+        portfolio["USD"] = 0
     crntPrice = getCurrentPrice(ticker)
     if amount < 0:
         logger.warning("negative amount passed to sell by bot " + bot_name)
