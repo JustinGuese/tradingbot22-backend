@@ -1,0 +1,44 @@
+default:
+  image: docker:24.0.5
+  services:
+    - name: docker:24.0.5-dind
+      command: ["--insecure-registry", "registry.kube-system.svc.cluster.local:5000"]
+
+variables:
+  DOCKER_HOST: tcp://docker:2376
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_TLS_VERIFY: 0
+  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  REGISTRY: registry.kube-system.svc.cluster.local:5000
+# before_script:
+  # - docker login -u gitlab-ci-token -p "$CI_BUILD_TOKEN" "$CI_REGISTRY"
+
+stages:
+  - build
+  - deploy
+
+build-docker:
+  stage: build
+  # image: gitlab/dind
+  tags:
+    - contabo
+  script:
+    - docker pull $REGISTRY/$CI_PROJECT_NAME:$CI_COMMIT_BRANCH || true
+    - docker build --cache-from $REGISTRY/$CI_PROJECT_NAME:$CI_COMMIT_BRANCH -t $REGISTRY/$CI_PROJECT_NAME:$CI_COMMIT_BRANCH .
+    - docker push $REGISTRY/$CI_PROJECT_NAME:$CI_COMMIT_BRANCH
+
+apply-kubectl:
+  stage: deploy
+  tags:
+    - contabo
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  dependencies:
+    - build-docker
+  script:
+    # for every .yaml file in kubernetes/, replace "latest" with $CI_COMMIT_BRANCH
+    - sed -i "s/:latest/:$CI_COMMIT_BRANCH/g" kubernetes/*.yaml
+    - kubectl apply -f kubernetes/
+    - kubectl rollout restart -f kubernetes/
+  environment: production
