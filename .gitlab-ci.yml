@@ -1,17 +1,7 @@
-default:
-  image: docker:24.0.5
-  services:
-    - name: docker:24.0.5-dind
-      command: ["--insecure-registry", "registry.kube-system.svc.cluster.local:5000"]
-
 variables:
-  DOCKER_HOST: tcp://docker:2376
-  DOCKER_TLS_CERTDIR: "/certs"
-  DOCKER_TLS_VERIFY: 0
-  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  REGISTRY: registry.kube-system.svc.cluster.local:5000
+  REGISTRY: registry.k8s.datafortress.cloud
 # before_script:
-  # - docker login -u gitlab-ci-token -p "$CI_BUILD_TOKEN" "$CI_REGISTRY"
+#   - docker login -u df -p  $REGISTRY
 
 stages:
   - build
@@ -19,7 +9,7 @@ stages:
 
 build-docker:
   stage: build
-  # image: gitlab/dind
+  image: docker:24.0.5
   tags:
     - contabo
   script:
@@ -40,5 +30,5 @@ apply-kubectl:
     # for every .yaml file in kubernetes/, replace "latest" with $CI_COMMIT_BRANCH
     - sed -i "s/:latest/:$CI_COMMIT_BRANCH/g" kubernetes/*.yaml
     - kubectl apply -f kubernetes/
-    - kubectl rollout restart -f kubernetes/
+    - kubectl rollout restart -f kubernetes/ || true
   environment: production
