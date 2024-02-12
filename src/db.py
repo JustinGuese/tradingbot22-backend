@@ -204,6 +204,7 @@ class AlphaSentimentArticle(Base):
     ai_ticker_reasons = Column(
         MutableDict.as_mutable(JSON), default=None, nullable=True
     )
+    posted_at = Column(DateTime, default=None, nullable=True)
     tickers: Mapped[List["AlphaSentiment"]] = relationship()
 
 
