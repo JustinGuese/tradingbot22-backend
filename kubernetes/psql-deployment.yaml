@@ -21,8 +21,7 @@ spec:
             - containerPort: 5432
           volumeMounts:
             - name: psql-data
-              mountPath: /var/lib/postgresql/
-              subPath: data
+              mountPath: /var/lib/postgresql/data/
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -47,8 +46,8 @@ spec:
         fsGroup: 70  # Add fsGroup security context
       volumes:
         - name: psql-data
-          persistentVolumeClaim:
-            claimName: psql-data
+          hostPath:
+            path: /mnt/hdd/pgtradingbot/
 --- 
 apiVersion: v1
 kind: Service
@@ -80,15 +79,3 @@ spec:
       targetPort: 5432
       nodePort: 31000
 ---
-# pvc
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: psql-data
-  namespace: tradingbot
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
