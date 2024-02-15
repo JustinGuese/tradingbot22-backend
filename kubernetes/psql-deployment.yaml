@@ -46,10 +46,10 @@ spec:
         fsGroup: 70  # Add fsGroup security context
       volumes:
         - name: psql-data
-          # hostPath:
-          #   path: /mnt/hdd/pgtradingbot/
-          persistentVolumeClaim:
-            claimName: tb-psql-pvc
+          hostPath:
+            path: /mnt/hdd/pgtradingbot/
+          # persistentVolumeClaim:
+          #   claimName: tb-psql-pvc
 --- 
 apiVersion: v1
 kind: Service
@@ -82,15 +82,15 @@ spec:
       nodePort: 31000
 ---
 # tb-psql-pvc class local-path
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: tb-psql-pvc
-  namespace: tradingbot
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 20Gi
-  storageClassName: local-path
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: tb-psql-pvc
+#   namespace: tradingbot
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 20Gi
+#   storageClassName: local-path
