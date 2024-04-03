@@ -1,5 +1,6 @@
 variables:
-  REGISTRY: registry.k8s.datafortress.cloud
+  # REGISTRY: registry.k8s.datafortress.cloud
+  REGISTRY: localhost:5000
 # before_script:
 #   - docker login -u df -p  $REGISTRY
 
